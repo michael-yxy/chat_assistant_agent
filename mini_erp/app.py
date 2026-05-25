@@ -125,7 +125,7 @@ init_sample_data()
 def main():
     st.title("📦 Mini ERP - 进销存管理系统")
     
-    menu = ["库存管理", "采购管理", "销售管理", "报表分析"]
+    menu = ["库存管理", "采购管理", "销售管理", "供应商管理", "客户管理", "报表分析"]
     choice = st.sidebar.selectbox("功能菜单", menu)
     
     if choice == "库存管理":
@@ -134,66 +134,199 @@ def main():
         manage_purchases()
     elif choice == "销售管理":
         manage_sales()
+    elif choice == "供应商管理":
+        manage_suppliers()
+    elif choice == "客户管理":
+        manage_customers()
     elif choice == "报表分析":
         show_reports()
 
 def manage_inventory():
     st.subheader("📦 库存管理")
     
-    tab1, tab2, tab3, tab4 = st.tabs(["库存列表", "添加商品", "库存预警", "商品分类"])
+    tab1, tab2, tab3, tab4 = st.tabs(["库存列表", "添加/编辑商品", "库存预警", "商品分类"])
     
     with tab1:
         products = db.fetch_df('SELECT * FROM products ORDER BY id DESC')
-        st.dataframe(products, use_container_width=True)
         
         if not products.empty:
-            selected_id = st.selectbox("选择商品查看详情", products['id'], format_func=lambda x: products[products['id'] == x]['name'].values[0])
-            product = products[products['id'] == selected_id].iloc[0]
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("当前库存", f"{product['stock']} {product['unit']}")
-            with col2:
-                st.metric("售价", f"¥{product['price']:,.2f}")
-            with col3:
-                st.metric("成本", f"¥{product['cost']:,.2f}")
+            st.dataframe(products, width='stretch')
+            
+            st.subheader("批量操作")
+            selected_ids = st.multiselect(
+                "选择要删除的商品",
+                products['id'],
+                format_func=lambda x: f"{products[products['id'] == x]['name'].values[0]} (ID:{x})"
+            )
+            
+            if st.button("删除选中商品"):
+                if selected_ids:
+                    for product_id in selected_ids:
+                        db.execute('DELETE FROM products WHERE id = ?', (product_id,))
+                    st.success(f"成功删除 {len(selected_ids)} 个商品")
+                else:
+                    st.warning("请选择要删除的商品")
+            
+            st.subheader("单个商品操作")
+            selected_id = st.selectbox(
+                "选择商品查看详情", 
+                products['id'], 
+                format_func=lambda x: products[products['id'] == x]['name'].values[0],
+                index=None,
+                placeholder="请选择商品..."
+            )
+            
+            if selected_id:
+                product = products[products['id'] == selected_id].iloc[0]
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("当前库存", f"{product['stock']} {product['unit']}")
+                with col2:
+                    st.metric("售价", f"¥{product['price']:,.2f}")
+                with col3:
+                    st.metric("成本", f"¥{product['cost']:,.2f}")
+                
+                if st.button(f"删除商品: {product['name']}", key=f"delete_{selected_id}"):
+                    db.execute('DELETE FROM products WHERE id = ?', (selected_id,))
+                    st.success(f"商品 {product['name']} 已删除")
+                    st.experimental_rerun()
+        else:
+            st.info("暂无商品数据，请先添加商品")
     
     with tab2:
+        st.subheader("添加新商品")
         with st.form("add_product"):
             col1, col2 = st.columns(2)
             with col1:
-                name = st.text_input("商品名称")
-                code = st.text_input("商品编码")
-                category = st.text_input("商品分类")
+                name = st.text_input("商品名称", placeholder="如：笔记本电脑")
+                code = st.text_input("商品编码", placeholder="如：NB001")
+                category = st.text_input("商品分类", placeholder="如：电子产品")
                 unit = st.text_input("单位", "件")
             with col2:
-                price = st.number_input("售价", min_value=0.01, step=0.01)
-                cost = st.number_input("成本价", min_value=0.01, step=0.01)
+                price = st.number_input("售价", min_value=0.01, step=0.01, format="%.2f")
+                cost = st.number_input("成本价", min_value=0.01, step=0.01, format="%.2f")
                 stock = st.number_input("初始库存", min_value=0, step=1)
                 min_stock = st.number_input("最低库存", min_value=0, step=1, value=10)
             
-            if st.form_submit_button("添加商品"):
-                if name and code and price and cost:
+            submitted = st.form_submit_button("添加商品")
+            if submitted:
+                if not name:
+                    st.error("请输入商品名称")
+                elif not code:
+                    st.error("请输入商品编码")
+                elif price <= 0:
+                    st.error("售价必须大于0")
+                elif cost <= 0:
+                    st.error("成本价必须大于0")
+                else:
                     try:
                         db.execute('INSERT INTO products (name, code, category, unit, price, cost, stock, min_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                                   (name, code, category, unit, price, cost, stock, min_stock))
-                        st.success(f"商品 {name} 添加成功!")
+                        st.success(f"✅ 商品 '{name}' 添加成功!")
                     except sqlite3.IntegrityError:
-                        st.error("商品编码已存在!")
+                        st.error("❌ 商品编码已存在，请使用其他编码")
     
     with tab3:
         low_stock = db.fetch_df('SELECT * FROM products WHERE stock <= min_stock')
-        st.warning(f"⚠️ 有 {len(low_stock)} 种商品库存不足")
-        st.dataframe(low_stock, use_container_width=True)
+        if len(low_stock) > 0:
+            st.warning(f"⚠️ 有 {len(low_stock)} 种商品库存不足")
+            st.dataframe(low_stock, width='stretch')
+        else:
+            st.success("🎉 所有商品库存充足")
     
     with tab4:
         categories = db.fetch_df('SELECT category, COUNT(*) as count, SUM(stock) as total_stock FROM products GROUP BY category')
-        st.dataframe(categories, use_container_width=True)
+        st.dataframe(categories, width='stretch')
         
         if not categories.empty:
             st.subheader("分类库存占比")
             fig, ax = plt.subplots()
             ax.pie(categories['total_stock'], labels=categories['category'], autopct='%1.1f%%')
             st.pyplot(fig)
+
+def manage_suppliers():
+    st.subheader("🏭 供应商管理")
+    
+    tab1, tab2 = st.tabs(["供应商列表", "添加供应商"])
+    
+    with tab1:
+        suppliers = db.fetch_df('SELECT * FROM suppliers ORDER BY id DESC')
+        st.dataframe(suppliers, width='stretch')
+        
+        if not suppliers.empty:
+            selected_ids = st.multiselect(
+                "选择要删除的供应商",
+                suppliers['id'],
+                format_func=lambda x: f"{suppliers[suppliers['id'] == x]['name'].values[0]} (ID:{x})"
+            )
+            
+            if st.button("删除选中供应商"):
+                if selected_ids:
+                    for supplier_id in selected_ids:
+                        db.execute('DELETE FROM suppliers WHERE id = ?', (supplier_id,))
+                    st.success(f"成功删除 {len(selected_ids)} 个供应商")
+                else:
+                    st.warning("请选择要删除的供应商")
+    
+    with tab2:
+        with st.form("add_supplier"):
+            col1, col2 = st.columns(2)
+            with col1:
+                name = st.text_input("供应商名称")
+                contact = st.text_input("联系人")
+            with col2:
+                phone = st.text_input("联系电话")
+                address = st.text_input("地址")
+            
+            if st.form_submit_button("添加供应商"):
+                if name:
+                    db.execute('INSERT INTO suppliers (name, contact, phone, address) VALUES (?, ?, ?, ?)',
+                              (name, contact, phone, address))
+                    st.success(f"供应商 '{name}' 添加成功!")
+                else:
+                    st.error("请输入供应商名称")
+
+def manage_customers():
+    st.subheader("👥 客户管理")
+    
+    tab1, tab2 = st.tabs(["客户列表", "添加客户"])
+    
+    with tab1:
+        customers = db.fetch_df('SELECT * FROM customers ORDER BY id DESC')
+        st.dataframe(customers, width='stretch')
+        
+        if not customers.empty:
+            selected_ids = st.multiselect(
+                "选择要删除的客户",
+                customers['id'],
+                format_func=lambda x: f"{customers[customers['id'] == x]['name'].values[0]} (ID:{x})"
+            )
+            
+            if st.button("删除选中客户"):
+                if selected_ids:
+                    for customer_id in selected_ids:
+                        db.execute('DELETE FROM customers WHERE id = ?', (customer_id,))
+                    st.success(f"成功删除 {len(selected_ids)} 个客户")
+                else:
+                    st.warning("请选择要删除的客户")
+    
+    with tab2:
+        with st.form("add_customer"):
+            col1, col2 = st.columns(2)
+            with col1:
+                name = st.text_input("客户名称")
+                contact = st.text_input("联系人")
+            with col2:
+                phone = st.text_input("联系电话")
+                address = st.text_input("地址")
+            
+            if st.form_submit_button("添加客户"):
+                if name:
+                    db.execute('INSERT INTO customers (name, contact, phone, address) VALUES (?, ?, ?, ?)',
+                              (name, contact, phone, address))
+                    st.success(f"客户 '{name}' 添加成功!")
+                else:
+                    st.error("请输入客户名称")
 
 def manage_purchases():
     st.subheader("📥 采购管理")
@@ -208,11 +341,19 @@ def manage_purchases():
             LEFT JOIN products pr ON p.product_id = pr.id
             ORDER BY p.purchase_date DESC
         ''')
-        st.dataframe(purchases, use_container_width=True)
+        st.dataframe(purchases, width='stretch')
     
     with tab2:
         suppliers = db.fetch_df('SELECT * FROM suppliers')
         products = db.fetch_df('SELECT * FROM products')
+        
+        if suppliers.empty:
+            st.error("请先添加供应商")
+            return
+        
+        if products.empty:
+            st.error("请先添加商品")
+            return
         
         with st.form("add_purchase"):
             supplier_id = st.selectbox("选择供应商", suppliers['id'], format_func=lambda x: suppliers[suppliers['id'] == x]['name'].values[0])
@@ -220,7 +361,7 @@ def manage_purchases():
             quantity = st.number_input("采购数量", min_value=1, step=1)
             
             product = products[products['id'] == product_id].iloc[0]
-            unit_price = st.number_input("单价", min_value=0.01, step=0.01, value=product['cost'])
+            unit_price = st.number_input("单价", min_value=0.01, step=0.01, value=product['cost'], format="%.2f")
             total_amount = quantity * unit_price
             st.metric("采购总额", f"¥{total_amount:,.2f}")
             
@@ -228,7 +369,7 @@ def manage_purchases():
                 db.execute('INSERT INTO purchases (supplier_id, product_id, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
                           (supplier_id, product_id, quantity, unit_price, total_amount))
                 db.execute('UPDATE products SET stock = stock + ? WHERE id = ?', (quantity, product_id))
-                st.success(f"采购成功! 已入库 {quantity} {product['unit']}")
+                st.success(f"✅ 采购成功! 已入库 {quantity} {product['unit']}")
 
 def manage_sales():
     st.subheader("📤 销售管理")
@@ -243,11 +384,19 @@ def manage_sales():
             LEFT JOIN products pr ON s.product_id = pr.id
             ORDER BY s.sale_date DESC
         ''')
-        st.dataframe(sales, use_container_width=True)
+        st.dataframe(sales, width='stretch')
     
     with tab2:
         customers = db.fetch_df('SELECT * FROM customers')
         products = db.fetch_df('SELECT * FROM products')
+        
+        if customers.empty:
+            st.error("请先添加客户")
+            return
+        
+        if products.empty:
+            st.error("请先添加商品")
+            return
         
         with st.form("add_sale"):
             customer_id = st.selectbox("选择客户", customers['id'], format_func=lambda x: customers[customers['id'] == x]['name'].values[0])
@@ -257,18 +406,18 @@ def manage_sales():
             max_qty = product['stock']
             quantity = st.number_input("销售数量", min_value=1, max_value=max_qty, step=1)
             
-            unit_price = st.number_input("单价", min_value=0.01, step=0.01, value=product['price'])
+            unit_price = st.number_input("单价", min_value=0.01, step=0.01, value=product['price'], format="%.2f")
             total_amount = quantity * unit_price
             st.metric("销售总额", f"¥{total_amount:,.2f}")
             
             if st.form_submit_button("确认销售"):
                 if quantity > product['stock']:
-                    st.error("库存不足!")
+                    st.error("❌ 库存不足!")
                 else:
                     db.execute('INSERT INTO sales (customer_id, product_id, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
                               (customer_id, product_id, quantity, unit_price, total_amount))
                     db.execute('UPDATE products SET stock = stock - ? WHERE id = ?', (quantity, product_id))
-                    st.success(f"销售成功! 已出库 {quantity} {product['unit']}")
+                    st.success(f"✅ 销售成功! 已出库 {quantity} {product['unit']}")
 
 def show_reports():
     st.subheader("📊 报表分析")
@@ -289,12 +438,13 @@ def show_reports():
         with col3:
             st.metric("库存成本总值", f"¥{total_value:,.2f}")
         
-        st.subheader("库存价值分布")
-        inventory['value'] = inventory['stock'] * inventory['cost']
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.bar(inventory['name'], inventory['value'])
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+        if not inventory.empty:
+            st.subheader("库存价值分布")
+            inventory['value'] = inventory['stock'] * inventory['cost']
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.bar(inventory['name'], inventory['value'])
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
     
     with tab2:
         sales = db.fetch_df('SELECT * FROM sales')
@@ -307,13 +457,14 @@ def show_reports():
         with col2:
             st.metric("销售总额", f"¥{total_sales:,.2f}")
         
-        st.subheader("每日销售额趋势")
-        sales['sale_date'] = pd.to_datetime(sales['sale_date'])
-        daily_sales = sales.groupby(sales['sale_date'].dt.date)['total_amount'].sum()
-        fig, ax = plt.subplots(figsize=(10, 5))
-        ax.plot(daily_sales.index, daily_sales.values)
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
+        if not sales.empty:
+            st.subheader("每日销售额趋势")
+            sales['sale_date'] = pd.to_datetime(sales['sale_date'])
+            daily_sales = sales.groupby(sales['sale_date'].dt.date)['total_amount'].sum()
+            fig, ax = plt.subplots(figsize=(10, 5))
+            ax.plot(daily_sales.index, daily_sales.values)
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
     
     with tab3:
         purchases = db.fetch_df('SELECT * FROM purchases')
