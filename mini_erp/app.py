@@ -403,20 +403,23 @@ def manage_sales():
             product_id = st.selectbox("选择商品", products['id'], format_func=lambda x: products[products['id'] == x]['name'].values[0])
             
             selected_product = products[products['id'] == product_id].iloc[0]
-            quantity = st.number_input("销售数量", min_value=1, max_value=int(selected_product['stock']), step=1, value=1)
+            quantity_input = st.number_input("销售数量", min_value=1, max_value=int(selected_product['stock']), step=1, value=1)
             
-            unit_price = st.number_input("单价", min_value=0.01, step=0.01, value=selected_product['price'], format="%.2f")
-            total_amount = quantity * unit_price
+            unit_price_input = st.number_input("单价", min_value=0.01, step=0.01, value=selected_product['price'], format="%.2f")
+            total_amount = quantity_input * unit_price_input
             st.metric("销售总额", f"¥{total_amount:,.2f}")
             
-            if st.form_submit_button("确认销售"):
-                if quantity > selected_product['stock']:
-                    st.error("❌ 库存不足!")
-                else:
-                    db.execute('INSERT INTO sales (customer_id, product_id, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
-                              (customer_id, product_id, quantity, unit_price, total_amount))
-                    db.execute('UPDATE products SET stock = stock - ? WHERE id = ?', (quantity, product_id))
-                    st.success(f"✅ 销售成功! 已出库 {quantity} {selected_product['unit']}")
+            submitted = st.form_submit_button("确认销售")
+            
+        if submitted:
+            current_product = db.fetch_df('SELECT * FROM products WHERE id = ?', (product_id,)).iloc[0]
+            if quantity_input > current_product['stock']:
+                st.error("❌ 库存不足!")
+            else:
+                db.execute('INSERT INTO sales (customer_id, product_id, quantity, unit_price, total_amount) VALUES (?, ?, ?, ?, ?)',
+                          (customer_id, product_id, quantity_input, unit_price_input, total_amount))
+                db.execute('UPDATE products SET stock = stock - ? WHERE id = ?', (quantity_input, product_id))
+                st.success(f"✅ 销售成功! 已出库 {quantity_input} {current_product['unit']}")
 
 def show_reports():
     st.subheader("📊 报表分析")
