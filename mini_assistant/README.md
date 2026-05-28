@@ -21,7 +21,7 @@
 ## 安装依赖
 
 ```bash
-cd rag_qa_app
+cd mini_assistant
 pip install -r requirements.txt
 ```
 
@@ -68,7 +68,7 @@ streamlit run app.py
 ## 项目结构
 
 ```
-rag_qa_app/
+mini_assistant/
 ├── app.py                 # Streamlit 主应用
 ├── config.py              # 配置文件
 ├── requirements.txt       # 依赖列表
