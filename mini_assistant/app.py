@@ -338,9 +338,51 @@ def render_knowledge_base_section():
     
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("文档数", stats['total_documents'])
+        doc_count = stats['total_documents']
+        if doc_count > 0:
+            if st.button(f"📄 文档数: <span style='color:blue; text-decoration:underline;'>{doc_count}</span>", 
+                        key="doc_count_btn",
+                        help="点击查看文档列表",
+                        use_container_width=True):
+                st.session_state.show_doc_list = not st.session_state.get('show_doc_list', False)
+        else:
+            st.metric("文档数", doc_count)
+    
     with col2:
-        st.metric("片段数", stats['index_size'])
+        chunk_count = stats['index_size']
+        if chunk_count > 0:
+            if st.button(f"📑 片段数: <span style='color:blue; text-decoration:underline;'>{chunk_count}</span>", 
+                        key="chunk_count_btn",
+                        help="点击查看片段列表",
+                        use_container_width=True):
+                st.session_state.show_chunk_list = not st.session_state.get('show_chunk_list', False)
+        else:
+            st.metric("片段数", chunk_count)
+    
+    # 文档列表预览
+    if st.session_state.get('show_doc_list', False) and stats['total_documents'] > 0:
+        with st.expander("📋 文档列表", expanded=True):
+            documents = st.session_state.rag_engine.vector_store.get_all_documents()
+            for doc_name in documents:
+                with st.container():
+                    st.markdown(f"**📄 {doc_name}**")
+                    # 显示文档的片段预览
+                    chunks = st.session_state.rag_engine.vector_store.get_chunks_by_document(doc_name)
+                    if chunks:
+                        with st.expander(f"查看片段 ({len(chunks)}个)", expanded=False):
+                            for i, chunk in enumerate(chunks, 1):
+                                st.markdown(f"**片段 {i}:**")
+                                st.markdown(f"{chunk['content'][:300]}..." if len(chunk['content']) > 300 else chunk['content'])
+                                st.markdown("---")
+    
+    # 片段列表预览
+    if st.session_state.get('show_chunk_list', False) and stats['index_size'] > 0:
+        with st.expander("📋 片段列表", expanded=True):
+            chunks = st.session_state.rag_engine.vector_store.get_all_chunks()
+            for i, chunk in enumerate(chunks, 1):
+                st.markdown(f"**片段 {i}** - 来源: {chunk['metadata'].get('source', '未知')}")
+                st.markdown(f"{chunk['content'][:300]}..." if len(chunk['content']) > 300 else chunk['content'])
+                st.markdown("---")
 
     if stats['total_documents'] == 0:
         st.info("💡 当前知识库为空，系统将以对话模式运行")
