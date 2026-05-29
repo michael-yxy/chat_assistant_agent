@@ -403,6 +403,9 @@ def render_knowledge_base_section():
         if st.button("✨ 处理文档", use_container_width=True):
             with st.spinner("正在处理文档..."):
                 try:
+                    # 确保上传目录存在
+                    upload_path.mkdir(parents=True, exist_ok=True)
+                    
                     saved_files = []
                     duplicate_files = []
                     new_files = []
