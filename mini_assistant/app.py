@@ -340,14 +340,22 @@ def render_knowledge_base_section():
     with col1:
         st.metric("文档数", stats['total_documents'])
         if stats['total_documents'] > 0:
-            if st.button("📋 查看文档列表", key="doc-btn", use_container_width=True):
+            st.markdown("""
+            <style>
+            .nav-btn {
+                font-size: 0.8rem !important;
+                padding: 0.3rem 0.6rem !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            if st.button("📋 文档列表", key="doc-btn", use_container_width=True):
                 st.session_state.page = 'doc_preview'
                 st.rerun()
     
     with col2:
         st.metric("片段数", stats['index_size'])
         if stats['index_size'] > 0:
-            if st.button("📋 查看片段列表", key="chunk-btn", use_container_width=True):
+            if st.button("📋 片段列表", key="chunk-btn", use_container_width=True):
                 st.session_state.page = 'chunk_preview'
                 st.rerun()
 
