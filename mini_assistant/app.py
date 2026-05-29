@@ -298,18 +298,18 @@ def render_kb_manager_page():
                 st.markdown("---")
                 st.markdown(f"#### ⚙️ 编辑知识库: {kb.name}")
                 
-                new_desc = st.text_area("描述", value=kb.description, height=60)
+                new_desc = st.text_area("描述", value=kb.description, height=60, key=f"desc_{kb.name}")
                 col_edit = st.columns(2)
                 with col_edit[0]:
-                    edit_chunk_size = st.number_input("片段大小", min_value=100, max_value=2000, value=kb.chunk_size, step=50)
+                    edit_chunk_size = st.number_input("片段大小", min_value=100, max_value=2000, value=kb.chunk_size, step=50, key=f"chunk_size_{kb.name}")
                 with col_edit[1]:
-                    edit_chunk_overlap = st.number_input("重叠大小", min_value=0, max_value=200, value=kb.chunk_overlap, step=10)
+                    edit_chunk_overlap = st.number_input("重叠大小", min_value=0, max_value=200, value=kb.chunk_overlap, step=10, key=f"chunk_overlap_{kb.name}")
                 
                 col_edit2 = st.columns(2)
                 with col_edit2[0]:
-                    edit_recall_k = st.number_input("召回数量", min_value=1, max_value=50, value=kb.recall_top_k)
+                    edit_recall_k = st.number_input("召回数量", min_value=1, max_value=50, value=kb.recall_top_k, key=f"recall_k_{kb.name}")
                 with col_edit2[1]:
-                    edit_rerank_k = st.number_input("重排数量", min_value=1, max_value=20, value=kb.rerank_top_k)
+                    edit_rerank_k = st.number_input("重排数量", min_value=1, max_value=20, value=kb.rerank_top_k, key=f"rerank_k_{kb.name}")
                 
                 col_buttons = st.columns(2)
                 with col_buttons[0]:
