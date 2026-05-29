@@ -815,236 +815,298 @@ def main():
             st.markdown("---")
         return
     
-    # 主界面布局：会话列表 + 主内容 + 知识库管理
-    col1, col2, col3 = st.columns([1, 3, 1])
+    # 初始化折叠状态
+    if 'sidebar_collapsed' not in st.session_state:
+        st.session_state.sidebar_collapsed = False
     
-    with col1:
-        # 左侧：会话历史列表
-        st.markdown("### 📋 会话历史")
-        
-        # 新建会话按钮
-        if st.button("➕ 新建会话", use_container_width=True):
-            st.session_state.current_session_id = generate_session_id()
-            st.session_state.chat_history = []
-            st.rerun()
-        
-        st.markdown("---")
-        
-        # 会话列表
-        for session in sessions:
-            is_active = session['id'] == st.session_state.current_session_id
-            col_btn, col_del = st.columns([5, 1])
-            with col_btn:
-                if st.button(
-                    session['title'],
-                    key=f"session_{session['id']}",
-                    use_container_width=True,
-                    type="primary" if is_active else "secondary"
-                ):
-                    st.session_state.current_session_id = session['id']
-                    session_data = load_session(session['id'])
-                    if session_data:
-                        st.session_state.chat_history = session_data.get('chat_history', [])
-                    st.rerun()
-            with col_del:
-                if st.button("x", key=f"del_{session['id']}", use_container_width=True):
-                    delete_session(session['id'])
-                    if session['id'] == st.session_state.current_session_id:
-                        st.session_state.current_session_id = generate_session_id()
-                        st.session_state.chat_history = []
-                    st.rerun()
+    # 用户输入（两种状态共用）
+    user_input = None
     
-    with col3:
-        # 右侧：知识库管理
-        render_knowledge_base_section()
-    
-    with col2:
-        # 主区域：LLM配置 + 聊天
-        st.title("🤖 智能问答助手")
-        st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
+    # 根据折叠状态调整布局
+    if st.session_state.sidebar_collapsed:
+        # 折叠状态：两列布局（主内容 + 知识库管理）
+        col_main, col_kb = st.columns([3, 1])
         
-        # LLM配置
-        render_llm_config_section()
+        with col_kb:
+            # 右侧：知识库管理
+            render_knowledge_base_section()
         
-        st.markdown("---")
+        with col_main:
+            # 展开按钮放在主区域顶部
+            if st.button("📋 展开会话历史", use_container_width=False):
+                st.session_state.sidebar_collapsed = False
+                st.rerun()
+            
+            # 主区域：LLM配置 + 聊天
+            st.title("🤖 智能问答助手")
+            st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
+            
+            # LLM配置
+            render_llm_config_section()
+            
+            st.markdown("---")
+            
+            # 搜索配置
+            st.markdown("### 🔍 搜索选项")
+            col_search1, col_search2 = st.columns([1, 1])
+            with col_search1:
+                use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
+                st.session_state.use_knowledge_search = use_knowledge_search
+            with col_search2:
+                use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
+                st.session_state.use_web_search = use_web_search
+            
+            st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
+            
+            st.markdown("---")
+            
+            # 聊天界面
+            st.markdown("### 💬 对话")
+            render_chat_interface()
+            
+            user_input = st.chat_input(
+                "请输入您的问题，我会根据知识库为您解答",
+                key="user_input"
+            )
+    else:
+        # 展开状态：三列布局（会话列表 + 主内容 + 知识库管理）
+        col1, col2, col3 = st.columns([1, 3, 1])
         
-        # 搜索配置
-        st.markdown("### 🔍 搜索选项")
-        col1, col2 = st.columns([1, 1])
         with col1:
-            use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
-            st.session_state.use_knowledge_search = use_knowledge_search
+            # 左侧：会话历史列表
+            # 折叠按钮
+            col_title, col_collapse = st.columns([4, 1])
+            with col_title:
+                st.markdown("### 📋 会话历史")
+            with col_collapse:
+                if st.button("«", key="collapse_sidebar", help="隐藏会话历史"):
+                    st.session_state.sidebar_collapsed = True
+                    st.rerun()
+            
+            # 新建会话按钮
+            if st.button("➕ 新建会话", use_container_width=True):
+                st.session_state.current_session_id = generate_session_id()
+                st.session_state.chat_history = []
+                st.rerun()
+            
+            st.markdown("---")
+            
+            # 会话列表
+            for session in sessions:
+                is_active = session['id'] == st.session_state.current_session_id
+                col_btn, col_del = st.columns([5, 1])
+                with col_btn:
+                    if st.button(
+                        session['title'],
+                        key=f"session_{session['id']}",
+                        use_container_width=True,
+                        type="primary" if is_active else "secondary"
+                    ):
+                        st.session_state.current_session_id = session['id']
+                        session_data = load_session(session['id'])
+                        if session_data:
+                            st.session_state.chat_history = session_data.get('chat_history', [])
+                        st.rerun()
+                with col_del:
+                    if st.button("x", key=f"del_{session['id']}", use_container_width=True):
+                        delete_session(session['id'])
+                        if session['id'] == st.session_state.current_session_id:
+                            st.session_state.current_session_id = generate_session_id()
+                            st.session_state.chat_history = []
+                        st.rerun()
+        
+        with col3:
+            # 右侧：知识库管理
+            render_knowledge_base_section()
+        
         with col2:
-            use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
-            st.session_state.use_web_search = use_web_search
-        
-        st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
-        
-        st.markdown("---")
-        
-        # 聊天界面
-        st.markdown("### 💬 对话")
-        render_chat_interface()
-        
-        user_input = st.chat_input(
-            "请输入您的问题，我会根据知识库为您解答",
-            key="user_input"
-        )
-        
-        if user_input:
-            st.session_state.chat_history.append({
-                'role': 'user',
-                'content': user_input
-            })
+            # 主区域：LLM配置 + 聊天
+            st.title("🤖 智能问答助手")
+            st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
             
-            full_response = ""
-            thinking_content = ""
-            current_mode = "chat"
-            sources = []
+            # LLM配置
+            render_llm_config_section()
+            
+            st.markdown("---")
+            
+            # 搜索配置
+            st.markdown("### 🔍 搜索选项")
+            col_search1, col_search2 = st.columns([1, 1])
+            with col_search1:
+                use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
+                st.session_state.use_knowledge_search = use_knowledge_search
+            with col_search2:
+                use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
+                st.session_state.use_web_search = use_web_search
+            
+            st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
+            
+            st.markdown("---")
+            
+            # 聊天界面
+            st.markdown("### 💬 对话")
+            render_chat_interface()
+            
+            user_input = st.chat_input(
+                "请输入您的问题，我会根据知识库为您解答",
+                key="user_input"
+            )
+    
+    # 用户输入处理（两种状态共用）
+    if user_input:
+        st.session_state.chat_history.append({
+            'role': 'user',
+            'content': user_input
+        })
+        
+        full_response = ""
+        thinking_content = ""
+        current_mode = "chat"
+        sources = []
+        search_results = []
+        
+        with st.chat_message("assistant"):
+            with st.expander("🧠 思考过程（实时）", expanded=True):
+                think_placeholder = st.empty()
+            
+            answer_box = st.empty()
+            
+            think_buf = ""
+            answer_buf = ""
+            
+            # 检查知识库状态（这应该很快，因为统计已经缓存）
+            stats = st.session_state.rag_engine.vector_store.get_stats()
+            has_knowledge_base = stats['total_documents'] > 0
+            use_web_search = st.session_state.use_web_search
+            use_knowledge_search = st.session_state.use_knowledge_search
+            
+            # 收集所有上下文（知识库 + 搜索结果）
+            contexts = []
+            retrieved_docs = None
             search_results = []
+            use_rag = has_knowledge_base and use_knowledge_search
             
-            with st.chat_message("assistant"):
-                with st.expander("🧠 思考过程（实时）", expanded=True):
-                    think_placeholder = st.empty()
-                
-                answer_box = st.empty()
-                
-                think_buf = ""
-                answer_buf = ""
-                
-                # 检查知识库状态（这应该很快，因为统计已经缓存）
-                stats = st.session_state.rag_engine.vector_store.get_stats()
-                has_knowledge_base = stats['total_documents'] > 0
-                use_web_search = st.session_state.use_web_search
-                use_knowledge_search = st.session_state.use_knowledge_search
-                
-                # 收集所有上下文（知识库 + 搜索结果）
-                contexts = []
-                retrieved_docs = None
-                search_results = []
-                use_rag = has_knowledge_base and use_knowledge_search
-                
-                result_queue = queue.Queue()
-                
-                def retrieve_docs():
-                    try:
-                        retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
-                            query=user_input,
-                            recall_top_k=st.session_state.recall_k,
-                            rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
-                        )
-                        result_queue.put(('retrieve', retrieved_docs))
-                    except Exception as e:
-                        result_queue.put(('retrieve_error', str(e)))
-                
-                def web_search():
-                    try:
-                        searcher = WebSearch()
-                        num_results = st.session_state.get('search_results_count', 5)
-                        if num_results > 0:
-                            results = searcher.search_with_content(user_input, num_results=num_results)
-                            result_queue.put(('search', results))
-                        else:
-                            result_queue.put(('search', []))
-                    except Exception as e:
-                        result_queue.put(('search_error', str(e)))
-                
-                # 优先进行知识库搜索
-                if use_rag:
-                    think_buf = "🔍 正在检索知识库..."
-                    think_placeholder.markdown(think_buf)
-                    try:
-                        retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
-                            query=user_input,
-                            recall_top_k=st.session_state.recall_k,
-                            rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
-                        )
-                        think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}条相关文档"
-                        think_placeholder.markdown(think_buf)
-                        sources.extend([
-                            {
-                                'content': doc['content'][:200] + "..." if len(doc['content']) > 200 else doc['content'],
-                                'source': doc['metadata']['source'],
-                                'score': doc.get('rerank_score', doc.get('distance', 0)),
-                                'type': 'knowledge'
-                            }
-                            for doc in retrieved_docs
-                        ])
-                        contexts.extend([doc['content'] for doc in retrieved_docs])
-                    except Exception as e:
-                        think_buf += f"\n⚠️ 知识库检索失败: {str(e)}"
-                        think_placeholder.markdown(think_buf)
-                
-                # 知识库搜索完成后，再进行联网搜索
-                if use_web_search:
-                    if think_buf:
-                        think_buf += "\n"
-                    think_buf += "🌐 正在进行联网搜索..."
-                    think_placeholder.markdown(think_buf)
-                    try:
-                        searcher = WebSearch()
-                        num_results = st.session_state.get('search_results_count', 5)
-                        if num_results > 0:
-                            search_results = searcher.search_with_content(user_input, num_results=num_results)
-                        else:
-                            search_results = []
-                        
-                        think_buf += f"\n✅ 联网搜索完成，获取到{len(search_results)}条结果：\n"
-                        for r in search_results:
-                            think_buf += f"- [{r['title']}]({r['url']})\n"
-                        think_placeholder.markdown(think_buf)
-                        sources.extend([
-                            {
-                                'content': r['content'][:200] + "..." if len(r['content']) > 200 else r['content'],
-                                'source': r['title'],
-                                'url': r['url'],
-                                'score': 1.0 - (r['rank'] * 0.1),
-                                'type': 'web'
-                            }
-                            for r in search_results
-                        ])
-                        contexts.extend([f"【{r['title']}】\n{r['content']}" for r in search_results])
-                    except Exception as e:
-                        think_buf += f"\n⚠️ 联网搜索失败: {str(e)}"
-                        think_placeholder.markdown(think_buf)
-                
-                # 开始生成答案
-                if think_buf:
-                    think_buf += "\n\n"
-                think_buf += "🧠 正在分析并生成答案..."
+            result_queue = queue.Queue()
+            
+            def retrieve_docs():
+                try:
+                    retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
+                        query=user_input,
+                        recall_top_k=st.session_state.recall_k,
+                        rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
+                    )
+                    result_queue.put(('retrieve', retrieved_docs))
+                except Exception as e:
+                    result_queue.put(('retrieve_error', str(e)))
+            
+            def web_search():
+                try:
+                    searcher = WebSearch()
+                    num_results = st.session_state.get('search_results_count', 5)
+                    if num_results > 0:
+                        results = searcher.search_with_content(user_input, num_results=num_results)
+                        result_queue.put(('search', results))
+                    else:
+                        result_queue.put(('search', []))
+                except Exception as e:
+                    result_queue.put(('search_error', str(e)))
+            
+            # 优先进行知识库搜索
+            if use_rag:
+                think_buf = "🔍 正在检索知识库..."
                 think_placeholder.markdown(think_buf)
-                
-                # 根据上下文生成答案
-                if contexts:
-                    for chunk in st.session_state.rag_engine.llm_client.generate_with_context_stream(query=user_input, context=contexts):
-                        if chunk.get("thinking"):
-                            think_buf += chunk["thinking"]
-                            think_placeholder.markdown(think_buf)
-                        if chunk.get("content"):
-                            answer_buf += chunk["content"]
-                            answer_box.markdown(answer_buf)
-                else:
-                    for chunk in st.session_state.rag_engine.llm_client.chat_stream(query=user_input):
-                        if chunk.get("thinking"):
-                            think_buf += chunk["thinking"]
-                            think_placeholder.markdown(think_buf)
-                        if chunk.get("content"):
-                            answer_buf += chunk["content"]
-                            answer_box.markdown(answer_buf)
+                try:
+                    retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
+                        query=user_input,
+                        recall_top_k=st.session_state.recall_k,
+                        rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
+                    )
+                    think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}条相关文档"
+                    think_placeholder.markdown(think_buf)
+                    sources.extend([
+                        {
+                            'content': doc['content'][:200] + "..." if len(doc['content']) > 200 else doc['content'],
+                            'source': doc['metadata']['source'],
+                            'score': doc.get('rerank_score', doc.get('distance', 0)),
+                            'type': 'knowledge'
+                        }
+                        for doc in retrieved_docs
+                    ])
+                    contexts.extend([doc['content'] for doc in retrieved_docs])
+                except Exception as e:
+                    think_buf += f"\n⚠️ 知识库检索失败: {str(e)}"
+                    think_placeholder.markdown(think_buf)
             
-            full_response = answer_buf
+            # 知识库搜索完成后，再进行联网搜索
+            if use_web_search:
+                if think_buf:
+                    think_buf += "\n"
+                think_buf += "🌐 正在进行联网搜索..."
+                think_placeholder.markdown(think_buf)
+                try:
+                    searcher = WebSearch()
+                    num_results = st.session_state.get('search_results_count', 5)
+                    if num_results > 0:
+                        search_results = searcher.search_with_content(user_input, num_results=num_results)
+                    else:
+                        search_results = []
+                    
+                    think_buf += f"\n✅ 联网搜索完成，获取到{len(search_results)}条结果：\n"
+                    for r in search_results:
+                        think_buf += f"- [{r['title']}]({r['url']})\n"
+                    think_placeholder.markdown(think_buf)
+                    sources.extend([
+                        {
+                            'content': r['content'][:200] + "..." if len(r['content']) > 200 else r['content'],
+                            'source': r['title'],
+                            'url': r['url'],
+                            'score': 1.0 - (r['rank'] * 0.1),
+                            'type': 'web'
+                        }
+                        for r in search_results
+                    ])
+                    contexts.extend([f"【{r['title']}】\n{r['content']}" for r in search_results])
+                except Exception as e:
+                    think_buf += f"\n⚠️ 联网搜索失败: {str(e)}"
+                    think_placeholder.markdown(think_buf)
             
-            st.session_state.chat_history.append({
-                'role': 'assistant',
-                'content': full_response,
-                'thinking': think_buf,
-                'mode': current_mode,
-                'sources': sources,
-                'search_results': search_results
-            })
+            # 开始生成答案
+            if think_buf:
+                think_buf += "\n\n"
+            think_buf += "🧠 正在分析并生成答案..."
+            think_placeholder.markdown(think_buf)
             
-            # 保存会话
-            save_session(st.session_state.current_session_id, st.session_state.chat_history)
+            # 根据上下文生成答案
+            if contexts:
+                for chunk in st.session_state.rag_engine.llm_client.generate_with_context_stream(query=user_input, context=contexts):
+                    if chunk.get("thinking"):
+                        think_buf += chunk["thinking"]
+                        think_placeholder.markdown(think_buf)
+                    if chunk.get("content"):
+                        answer_buf += chunk["content"]
+                        answer_box.markdown(answer_buf)
+            else:
+                for chunk in st.session_state.rag_engine.llm_client.chat_stream(query=user_input):
+                    if chunk.get("thinking"):
+                        think_buf += chunk["thinking"]
+                        think_placeholder.markdown(think_buf)
+                    if chunk.get("content"):
+                        answer_buf += chunk["content"]
+                        answer_box.markdown(answer_buf)
+        
+        full_response = answer_buf
+        
+        st.session_state.chat_history.append({
+            'role': 'assistant',
+            'content': full_response,
+            'thinking': think_buf,
+            'mode': current_mode,
+            'sources': sources,
+            'search_results': search_results
+        })
+        
+        # 保存会话
+        save_session(st.session_state.current_session_id, st.session_state.chat_history)
 
 
 if __name__ == '__main__':
