@@ -338,68 +338,18 @@ def render_knowledge_base_section():
     
     col1, col2 = st.columns(2)
     with col1:
-        doc_count = stats['total_documents']
-        if doc_count > 0:
-            st.markdown(f"""
-            <style>
-            .stat-card {{
-                position: relative;
-                text-align: center;
-                padding: 1rem;
-                background-color: #f9f9f9;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }}
-            .stat-card:hover {{
-                background-color: #f0f0f0;
-            }}
-            .stat-label {{
-                font-size: 0.875rem;
-                color: #6b7280;
-                margin-bottom: 0.25rem;
-            }}
-            .stat-value {{
-                font-size: 1.5rem;
-                font-weight: 600;
-                color: #3b82f6;
-                text-decoration: underline;
-            }}
-            .stat-overlay-btn {{
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                opacity: 0;
-                cursor: pointer;
-            }}
-            </style>
-            <div class="stat-card" onclick="document.getElementById('doc-btn-hidden').click();">
-                <div class="stat-label">文档数</div>
-                <div class="stat-value">{doc_count}</div>
-                <button id="doc-btn-hidden" style="display: none;"></button>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("", key="doc-btn-hidden", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview')):
-                pass
-        else:
-            st.metric("文档数", doc_count)
+        st.metric("文档数", stats['total_documents'])
+        if stats['total_documents'] > 0:
+            if st.button("📋 查看文档列表", key="doc-btn", use_container_width=True):
+                st.session_state.page = 'doc_preview'
+                st.rerun()
     
     with col2:
-        chunk_count = stats['index_size']
-        if chunk_count > 0:
-            st.markdown(f"""
-            <div class="stat-card" onclick="document.getElementById('chunk-btn-hidden').click();">
-                <div class="stat-label">片段数</div>
-                <div class="stat-value">{chunk_count}</div>
-                <button id="chunk-btn-hidden" style="display: none;"></button>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("", key="chunk-btn-hidden", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview')):
-                pass
-        else:
-            st.metric("片段数", chunk_count)
+        st.metric("片段数", stats['index_size'])
+        if stats['index_size'] > 0:
+            if st.button("📋 查看片段列表", key="chunk-btn", use_container_width=True):
+                st.session_state.page = 'chunk_preview'
+                st.rerun()
 
     if stats['total_documents'] == 0:
         st.info("💡 当前知识库为空，系统将以对话模式运行")
