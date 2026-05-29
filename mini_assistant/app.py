@@ -819,6 +819,25 @@ def main():
     if 'sidebar_collapsed' not in st.session_state:
         st.session_state.sidebar_collapsed = False
     
+    # 根据折叠状态计算主内容占比，用于设置输入框宽度
+    if st.session_state.sidebar_collapsed:
+        # 折叠状态：主内容占 3/4
+        main_content_ratio = 0.75
+    else:
+        # 展开状态：主内容占 3/5
+        main_content_ratio = 0.6
+    
+    # 添加自定义 CSS 控制输入框宽度
+    st.markdown(f"""
+    <style>
+    .stChatInput {{
+        max-width: {main_content_ratio * 100}% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+    
     # 根据折叠状态调整布局
     if st.session_state.sidebar_collapsed:
         # 折叠状态：两列布局（主内容 + 知识库管理）
