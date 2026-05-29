@@ -6,8 +6,10 @@ import time
 import threading
 import queue
 from datetime import datetime
+from pathlib import Path
 
 from search import WebSearch
+from kb_manager import KBManager, KnowledgeBaseConfig
 
 # 会话管理
 SESSION_DIR = os.path.join(os.path.dirname(__file__), 'sessions')
@@ -169,8 +171,184 @@ def render_llm_config_section():
                 st.rerun()
 
 
+def render_kb_manager_page():
+    st.title("🏛️ 知识库管理")
+    
+    if st.button("← 返回主页面", key="back_from_kb_manager"):
+        st.session_state.page = 'main'
+        st.rerun()
+    
+    st.markdown("---")
+    
+    # 初始化KB管理器
+    if 'kb_manager' not in st.session_state:
+        st.session_state.kb_manager = KBManager(Path(__file__).parent)
+    
+    kb_manager = st.session_state.kb_manager
+    
+    # 新建知识库表单
+    with st.expander("➕ 新建知识库", expanded=False):
+        st.markdown("#### 创建新的知识库")
+        
+        new_kb_name = st.text_input("知识库名称", placeholder="请输入知识库名称")
+        new_kb_desc = st.text_area("知识库描述", placeholder="请输入知识库描述（可选）", height=60)
+        
+        st.markdown("**文档处理配置:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            new_chunk_size = st.number_input("片段大小", min_value=100, max_value=2000, value=500, step=50)
+        with col2:
+            new_chunk_overlap = st.number_input("重叠大小", min_value=0, max_value=200, value=50, step=10)
+        
+        st.markdown("**检索配置:**")
+        col3, col4 = st.columns(2)
+        with col3:
+            new_recall_k = st.number_input("召回数量", min_value=1, max_value=50, value=20)
+        with col4:
+            new_rerank_k = st.number_input("重排数量", min_value=1, max_value=20, value=5)
+        
+        if st.button("✨ 创建知识库", use_container_width=True):
+            if not new_kb_name.strip():
+                st.error("请输入知识库名称")
+            else:
+                config = KnowledgeBaseConfig(
+                    name=new_kb_name.strip(),
+                    description=new_kb_desc.strip(),
+                    chunk_size=new_chunk_size,
+                    chunk_overlap=new_chunk_overlap,
+                    recall_top_k=new_recall_k,
+                    rerank_top_k=new_rerank_k
+                )
+                success = kb_manager.create_kb(config)
+                if success:
+                    st.success(f"✅ 知识库 '{new_kb_name}' 创建成功！")
+                    st.rerun()
+                else:
+                    st.error(f"❌ 知识库 '{new_kb_name}' 已存在")
+    
+    st.markdown("---")
+    
+    # 知识库列表
+    st.markdown("#### 📋 知识库列表")
+    kbs = kb_manager.list_kbs()
+    
+    if not kbs:
+        st.info("暂无知识库，请创建一个新的知识库")
+        return
+    
+    for kb in kbs:
+        stats = kb_manager.get_kb_stats(kb.name)
+        is_active = st.session_state.get('current_kb') == kb.name
+        
+        with st.container():
+            col_header = st.columns([3, 1, 1])
+            with col_header[0]:
+                st.markdown(f"**📁 {kb.name}**")
+                if kb.description:
+                    st.markdown(f"<small style='color: #666'>{kb.description}</small>", unsafe_allow_html=True)
+            
+            with col_header[1]:
+                if st.button("⚙️ 配置", key=f"config_{kb.name}", use_container_width=True):
+                    st.session_state.editing_kb = kb.name
+                    st.rerun()
+            
+            with col_header[2]:
+                if kb.name != "默认知识库":
+                    if st.button("🗑️ 删除", key=f"delete_kb_{kb.name}", use_container_width=True):
+                        st.session_state.deleting_kb = kb.name
+            
+            # 统计信息
+            col_stats = st.columns(3)
+            with col_stats[0]:
+                st.metric("文档数", stats['documents'])
+            with col_stats[1]:
+                st.metric("片段数", stats['chunks'])
+            with col_stats[2]:
+                if st.button("🎯 使用此知识库", key=f"use_{kb.name}", use_container_width=True, type="primary" if is_active else "secondary"):
+                    st.session_state.current_kb = kb.name
+                    # 更新RAG引擎使用的向量存储路径
+                    from rag_engine import RAGEngine
+                    vector_store_path = kb_manager.get_kb_vector_store_path(kb.name)
+                    st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
+                    st.success(f"✅ 已切换到知识库 '{kb.name}'")
+                    st.rerun()
+            
+            # 删除确认
+            if st.session_state.get('deleting_kb') == kb.name:
+                st.warning(f"⚠️ 确定要删除知识库 '{kb.name}' 吗？此操作将删除所有文档和配置，不可恢复！")
+                col_confirm = st.columns(2)
+                with col_confirm[0]:
+                    if st.button("✅ 确认删除", key=f"confirm_delete_kb_{kb.name}"):
+                        success = kb_manager.delete_kb(kb.name)
+                        if success:
+                            st.success(f"✅ 知识库 '{kb.name}' 已删除")
+                            if st.session_state.get('current_kb') == kb.name:
+                                st.session_state.current_kb = "默认知识库"
+                            st.session_state.deleting_kb = None
+                            st.rerun()
+                        else:
+                            st.error("删除失败")
+                with col_confirm[1]:
+                    if st.button("❌ 取消", key=f"cancel_delete_kb_{kb.name}"):
+                        st.session_state.deleting_kb = None
+                        st.rerun()
+            
+            # 配置编辑
+            if st.session_state.get('editing_kb') == kb.name:
+                st.markdown("---")
+                st.markdown(f"#### ⚙️ 编辑知识库: {kb.name}")
+                
+                new_desc = st.text_area("描述", value=kb.description, height=60)
+                col_edit = st.columns(2)
+                with col_edit[0]:
+                    edit_chunk_size = st.number_input("片段大小", min_value=100, max_value=2000, value=kb.chunk_size, step=50)
+                with col_edit[1]:
+                    edit_chunk_overlap = st.number_input("重叠大小", min_value=0, max_value=200, value=kb.chunk_overlap, step=10)
+                
+                col_edit2 = st.columns(2)
+                with col_edit2[0]:
+                    edit_recall_k = st.number_input("召回数量", min_value=1, max_value=50, value=kb.recall_top_k)
+                with col_edit2[1]:
+                    edit_rerank_k = st.number_input("重排数量", min_value=1, max_value=20, value=kb.rerank_top_k)
+                
+                col_buttons = st.columns(2)
+                with col_buttons[0]:
+                    if st.button("💾 保存配置", key=f"save_config_{kb.name}", use_container_width=True):
+                        updated_config = KnowledgeBaseConfig(
+                            name=kb.name,
+                            description=new_desc,
+                            chunk_size=edit_chunk_size,
+                            chunk_overlap=edit_chunk_overlap,
+                            recall_top_k=edit_recall_k,
+                            rerank_top_k=edit_rerank_k
+                        )
+                        success = kb_manager.update_kb(kb.name, updated_config)
+                        if success:
+                            st.success("✅ 配置已保存")
+                            st.session_state.editing_kb = None
+                            st.rerun()
+                        else:
+                            st.error("保存失败")
+                with col_buttons[1]:
+                    if st.button("❌ 取消", key=f"cancel_edit_{kb.name}", use_container_width=True):
+                        st.session_state.editing_kb = None
+                        st.rerun()
+            
+            st.markdown("---")
+
+
 def render_knowledge_base_section():
     st.markdown("### 📚 知识库管理")
+    
+    # 知识库管理入口
+    if st.button("🏛️ 管理知识库", use_container_width=True, type="secondary"):
+        st.session_state.page = 'kb_manager'
+        st.rerun()
+    
+    # 当前知识库信息
+    current_kb = st.session_state.get('current_kb', '默认知识库')
+    st.markdown(f"<small style='color: #666'>当前知识库: <strong>{current_kb}</strong></small>", unsafe_allow_html=True)
+    st.markdown("---")
     
     uploaded_files = st.file_uploader(
         "上传文档",
@@ -510,7 +688,7 @@ def main():
     if 'use_web_search' not in st.session_state:
         st.session_state.use_web_search = True
     if 'use_knowledge_search' not in st.session_state:
-        st.session_state.use_knowledge_search = False
+        st.session_state.use_knowledge_search = True
     if 'search_results_count' not in st.session_state:
         st.session_state.search_results_count = 5
     if 'search_results' not in st.session_state:
@@ -548,6 +726,11 @@ def main():
     
     # 加载会话列表
     sessions = load_sessions()
+    
+    # 知识库管理页面
+    if st.session_state.page == 'kb_manager':
+        render_kb_manager_page()
+        return
     
     # 文档预览页面
     if st.session_state.page == 'doc_preview':
