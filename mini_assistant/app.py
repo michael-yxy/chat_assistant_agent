@@ -340,49 +340,32 @@ def render_knowledge_base_section():
     with col1:
         doc_count = stats['total_documents']
         if doc_count > 0:
-            if st.button(f"📄 文档数: <span style='color:blue; text-decoration:underline;'>{doc_count}</span>", 
-                        key="doc_count_btn",
-                        help="点击查看文档列表",
-                        use_container_width=True):
-                st.session_state.show_doc_list = not st.session_state.get('show_doc_list', False)
+            st.markdown(f"""
+            <div style="text-align: center; padding: 1rem; background-color: #f9f9f9; border-radius: 0.5rem;">
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">文档数</div>
+                <div style="font-size: 1.5rem; font-weight: 600;">
+                    <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('doc-preview-btn').click();">{doc_count}</a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.button("", key="doc-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview'), style={"display": "none"})
         else:
             st.metric("文档数", doc_count)
     
     with col2:
         chunk_count = stats['index_size']
         if chunk_count > 0:
-            if st.button(f"📑 片段数: <span style='color:blue; text-decoration:underline;'>{chunk_count}</span>", 
-                        key="chunk_count_btn",
-                        help="点击查看片段列表",
-                        use_container_width=True):
-                st.session_state.show_chunk_list = not st.session_state.get('show_chunk_list', False)
+            st.markdown(f"""
+            <div style="text-align: center; padding: 1rem; background-color: #f9f9f9; border-radius: 0.5rem;">
+                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">片段数</div>
+                <div style="font-size: 1.5rem; font-weight: 600;">
+                    <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('chunk-preview-btn').click();">{chunk_count}</a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.button("", key="chunk-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview'), style={"display": "none"})
         else:
             st.metric("片段数", chunk_count)
-    
-    # 文档列表预览
-    if st.session_state.get('show_doc_list', False) and stats['total_documents'] > 0:
-        with st.expander("📋 文档列表", expanded=True):
-            documents = st.session_state.rag_engine.vector_store.get_all_documents()
-            for doc_name in documents:
-                with st.container():
-                    st.markdown(f"**📄 {doc_name}**")
-                    # 显示文档的片段预览
-                    chunks = st.session_state.rag_engine.vector_store.get_chunks_by_document(doc_name)
-                    if chunks:
-                        with st.expander(f"查看片段 ({len(chunks)}个)", expanded=False):
-                            for i, chunk in enumerate(chunks, 1):
-                                st.markdown(f"**片段 {i}:**")
-                                st.markdown(f"{chunk['content'][:300]}..." if len(chunk['content']) > 300 else chunk['content'])
-                                st.markdown("---")
-    
-    # 片段列表预览
-    if st.session_state.get('show_chunk_list', False) and stats['index_size'] > 0:
-        with st.expander("📋 片段列表", expanded=True):
-            chunks = st.session_state.rag_engine.vector_store.get_all_chunks()
-            for i, chunk in enumerate(chunks, 1):
-                st.markdown(f"**片段 {i}** - 来源: {chunk['metadata'].get('source', '未知')}")
-                st.markdown(f"{chunk['content'][:300]}..." if len(chunk['content']) > 300 else chunk['content'])
-                st.markdown("---")
 
     if stats['total_documents'] == 0:
         st.info("💡 当前知识库为空，系统将以对话模式运行")
@@ -542,6 +525,8 @@ def main():
         st.session_state.search_results_count = 5
     if 'search_results' not in st.session_state:
         st.session_state.search_results = []
+    if 'page' not in st.session_state:
+        st.session_state.page = 'main'
     if 'rag_engine' not in st.session_state:
         from rag_engine import RAGEngine
         from config import VECTOR_STORE_DIR
@@ -573,6 +558,47 @@ def main():
     
     # 加载会话列表
     sessions = load_sessions()
+    
+    # 文档预览页面
+    if st.session_state.page == 'doc_preview':
+        st.title("📋 文档列表预览")
+        if st.button("← 返回主页面", key="back_from_doc"):
+            st.session_state.page = 'main'
+            st.rerun()
+        
+        st.markdown("---")
+        documents = st.session_state.rag_engine.vector_store.get_all_documents()
+        st.markdown(f"### 共 {len(documents)} 个文档")
+        
+        for doc_name in documents:
+            st.markdown(f"#### 📄 {doc_name}")
+            chunks = st.session_state.rag_engine.vector_store.get_chunks_by_document(doc_name)
+            if chunks:
+                st.markdown(f"**包含 {len(chunks)} 个片段:**")
+                for i, chunk in enumerate(chunks, 1):
+                    with st.expander(f"片段 {i}", expanded=False):
+                        st.markdown(f"{chunk['content']}")
+            st.markdown("---")
+        return
+    
+    # 片段预览页面
+    if st.session_state.page == 'chunk_preview':
+        st.title("📑 片段列表预览")
+        if st.button("← 返回主页面", key="back_from_chunk"):
+            st.session_state.page = 'main'
+            st.rerun()
+        
+        st.markdown("---")
+        chunks = st.session_state.rag_engine.vector_store.get_all_chunks()
+        st.markdown(f"### 共 {len(chunks)} 个片段")
+        
+        for i, chunk in enumerate(chunks, 1):
+            st.markdown(f"#### 片段 {i}")
+            st.markdown(f"**来源:** {chunk['metadata'].get('source', '未知')}")
+            st.markdown(f"**内容:**")
+            st.markdown(chunk['content'])
+            st.markdown("---")
+        return
     
     # 主界面布局：会话列表 + 主内容 + 知识库管理
     col1, col2, col3 = st.columns([1, 3, 1])
