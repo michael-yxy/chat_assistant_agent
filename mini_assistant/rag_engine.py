@@ -141,15 +141,26 @@ class RAGEngine:
         total_chunks = 0
         successful_files = []
         failed_files = []
+        
+        logger.info(f"Starting to process {len(file_paths)} files")
 
         for file_path in file_paths:
             try:
+                logger.info(f"Processing file: {file_path}")
+                
                 documents = self.doc_processor.process_file(file_path)
+                logger.info(f"Extracted {len(documents)} chunks from {file_path.name}")
 
                 if documents:
+                    # 确保嵌入模型已初始化
+                    if self._embedding_model is None:
+                        logger.info("Initializing embedding model...")
+                        self.embedding_model
+                    
                     embeddings = self.embedding_model.encode(
                         [doc['content'] for doc in documents]
                     )
+                    logger.info(f"Generated {len(embeddings)} embeddings")
 
                     self.vector_store.add_documents(embeddings, documents)
                     total_chunks += len(documents)
@@ -157,13 +168,18 @@ class RAGEngine:
 
                     logger.info(f"Added {len(documents)} chunks from {file_path.name}")
                 else:
+                    logger.warning(f"No content extracted from {file_path.name}")
                     failed_files.append(file_path.name)
 
             except Exception as e:
-                logger.error(f"Error processing {file_path}: {e}")
+                logger.error(f"Error processing {file_path}: {e}", exc_info=True)
                 failed_files.append(file_path.name)
 
-        self.vector_store.save()
+        if total_chunks > 0:
+            logger.info(f"Saving vector store with {total_chunks} chunks")
+            self.vector_store.save()
+        else:
+            logger.warning("No chunks to save, skipping vector store save")
 
         return {
             'total_chunks': total_chunks,
@@ -219,69 +235,6 @@ class RAGEngine:
             'failed_files': failed_files
         }
 
-    def query(
-        self,
-        question: str,
-        recall_top_k: int = 20,
-        rerank_top_k: int = 5,
-        use_rerank: bool = True
-    ) -> Dict:
-        stats = self.vector_store.get_stats()
-        has_knowledge_base = stats['total_documents'] > 0
-        
-        thinking_steps = []
-
-        if has_knowledge_base:
-            thinking_steps.append(f"🧠 分析问题: {question}")
-            thinking_steps.append(f"📚 知识库中有 {stats['total_documents']} 个文档，{stats['index_size']} 个片段")
-            thinking_steps.append(f"🔍 正在检索相关文档... (Recall: top-{recall_top_k})")
-            
-            retrieved_docs = self.retriever.retrieve(
-                query=question,
-                recall_top_k=recall_top_k,
-                rerank_top_k=rerank_top_k if use_rerank else recall_top_k
-            )
-
-            if retrieved_docs:
-                if use_rerank:
-                    thinking_steps.append(f"⚡ 正在进行重排... (ReRank: top-{rerank_top_k})")
-                thinking_steps.append(f"✅ 检索到 {len(retrieved_docs)} 篇相关文档")
-                thinking_steps.append(f"📖 正在阅读文档并生成回答...")
-                
-                contexts = [doc['content'] for doc in retrieved_docs]
-                answer = self.llm_client.generate_with_context(
-                    query=question,
-                    context=contexts
-                )
-
-                return {
-                    'answer': answer,
-                    'sources': [
-                        {
-                            'content': doc['content'][:200] + "..." if len(doc['content']) > 200 else doc['content'],
-                            'source': doc['metadata']['source'],
-                            'score': doc.get('rerank_score', doc.get('distance', 0))
-                        }
-                        for doc in retrieved_docs
-                    ],
-                    'contexts': contexts,
-                    'mode': 'rag',
-                    'thinking': thinking_steps
-                }
-            else:
-                thinking_steps.append("⚠️ 知识库中未找到相关文档，切换到对话模式")
-
-        thinking_steps.append("💬 使用大模型直接回答...")
-        answer = self.llm_client.chat(query=question)
-
-        return {
-            'answer': answer,
-            'sources': [],
-            'contexts': [],
-            'mode': 'chat',
-            'thinking': thinking_steps
-        }
-    
     def query_stream(
         self,
         question: str,
@@ -370,7 +323,7 @@ class RAGEngine:
             if retrieved_docs:
                 if use_rerank:
                     thinking_steps.append(f"⚡ 正在进行重排... (ReRank: top-{rerank_top_k})")
-                thinking_steps.append(f"✅ 检索到 {len(retrieved_docs)} 篇相关文档")
+                thinking_steps.append(f"✅ 检索到 {len(retrieved_docs)} 个相关片段")
                 thinking_steps.append(f"📖 正在阅读文档并生成回答...")
                 
                 contexts = [doc['content'] for doc in retrieved_docs]
@@ -406,7 +359,7 @@ class RAGEngine:
             'mode': 'chat',
             'thinking': thinking_steps
         }
-
+    
     def get_stats(self) -> Dict:
         return self.vector_store.get_stats()
 

@@ -73,7 +73,8 @@ class VectorStore:
 
     def save(self):
         if self.store_path is None:
-            return
+            logger.error("Cannot save vector store: store_path is None")
+            raise ValueError("Vector store path is not set")
 
         self.store_path.mkdir(parents=True, exist_ok=True)
 

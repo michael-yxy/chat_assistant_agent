@@ -41,6 +41,7 @@ mini_assistant_backup/
 mini_assistant/sessions/
 mini_assistant/uploads/
 mini_assistant/vector_store/
+mini_assistant/knowledge_bases/
 mini_assistant/uploaded_files.json
 
 # mini_erp data files

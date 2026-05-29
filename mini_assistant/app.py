@@ -590,16 +590,22 @@ def render_knowledge_base_section():
 
     if st.button("🗑️ 清空知识库", use_container_width=True):
         try:
-            # 删除uploads目录下的所有文件
             import shutil
-            for file_path in config.UPLOAD_DIR.glob('*'):
-                if file_path.is_file():
-                    file_path.unlink()
+            
+            # 获取当前知识库的路径
+            upload_path, vector_store_path, uploaded_files_path = get_current_kb_paths()
+            
+            # 删除uploads目录下的所有文件
+            if upload_path.exists():
+                for file_path in upload_path.glob('*'):
+                    if file_path.is_file():
+                        file_path.unlink()
             
             # 删除vector_store目录下的所有文件
-            for file_path in config.VECTOR_STORE_DIR.glob('*'):
-                if file_path.is_file():
-                    file_path.unlink()
+            if vector_store_path.exists():
+                for file_path in vector_store_path.glob('*'):
+                    if file_path.is_file():
+                        file_path.unlink()
             
             # 重置RAG引擎
             st.session_state.rag_engine.reset()
@@ -609,7 +615,7 @@ def render_knowledge_base_section():
             st.session_state.chat_history = []
             
             # 清空已上传文件列表
-            save_uploaded_files([])
+            save_kb_uploaded_files(uploaded_files_path, [])
             
             # 清除缓存的统计信息
             if 'kb_stats' in st.session_state:
@@ -745,10 +751,14 @@ def main():
         st.session_state.search_results = []
     if 'page' not in st.session_state:
         st.session_state.page = 'main'
+    if 'kb_manager' not in st.session_state:
+        st.session_state.kb_manager = KBManager(Path(__file__).parent)
+    
     if 'rag_engine' not in st.session_state:
         from rag_engine import RAGEngine
-        from config import VECTOR_STORE_DIR
-        st.session_state.rag_engine = RAGEngine(vector_store_path=VECTOR_STORE_DIR)
+        current_kb = st.session_state.get('current_kb', '默认知识库')
+        vector_store_path = st.session_state.kb_manager.get_kb_vector_store_path(current_kb)
+        st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
         # 不在初始化时测试连接，只在用户点击测试时才测试
         st.session_state.last_test_result = None
         
@@ -1056,7 +1066,7 @@ def main():
                         recall_top_k=st.session_state.recall_k,
                         rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
                     )
-                    think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}条相关文档"
+                    think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}个相关片段"
                     think_placeholder.markdown(think_buf)
                     sources.extend([
                         {
