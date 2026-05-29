@@ -270,6 +270,11 @@ def render_kb_manager_page():
                     from rag_engine import RAGEngine
                     vector_store_path = kb_manager.get_kb_vector_store_path(kb.name)
                     st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
+                    # 清除缓存的统计信息和上传文件列表
+                    if 'kb_stats' in st.session_state:
+                        del st.session_state.kb_stats
+                    if 'last_kb' in st.session_state:
+                        del st.session_state.last_kb
                     st.success(f"✅ 已切换到知识库 '{kb.name}'")
                     st.rerun()
             
