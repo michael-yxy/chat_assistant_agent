@@ -342,61 +342,62 @@ def render_knowledge_base_section():
         if doc_count > 0:
             st.markdown(f"""
             <style>
-            .doc-count-btn {{
-                width: 100%;
-                border: none;
+            .stat-card {{
+                position: relative;
+                text-align: center;
+                padding: 1rem;
                 background-color: #f9f9f9;
                 border-radius: 0.5rem;
-                padding: 1rem;
                 cursor: pointer;
+                transition: background-color 0.2s;
             }}
-            .doc-count-btn:hover {{
+            .stat-card:hover {{
                 background-color: #f0f0f0;
             }}
-            .doc-count-label {{
+            .stat-label {{
                 font-size: 0.875rem;
                 color: #6b7280;
                 margin-bottom: 0.25rem;
             }}
-            .doc-count-value {{
+            .stat-value {{
                 font-size: 1.5rem;
                 font-weight: 600;
                 color: #3b82f6;
                 text-decoration: underline;
             }}
+            .stat-overlay-btn {{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }}
             </style>
+            <div class="stat-card" onclick="document.getElementById('doc-btn-hidden').click();">
+                <div class="stat-label">文档数</div>
+                <div class="stat-value">{doc_count}</div>
+                <button id="doc-btn-hidden" style="display: none;"></button>
+            </div>
             """, unsafe_allow_html=True)
-            
-            doc_button = st.button(
-                f"""
-                <div class="doc-count-btn">
-                    <div class="doc-count-label">文档数</div>
-                    <div class="doc-count-value">{doc_count}</div>
-                </div>
-                """,
-                key="doc-preview-btn",
-                on_click=lambda: setattr(st.session_state, 'page', 'doc_preview'),
-                use_container_width=True,
-                help="点击查看文档列表"
-            )
+            if st.button("", key="doc-btn-hidden", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview')):
+                pass
         else:
             st.metric("文档数", doc_count)
     
     with col2:
         chunk_count = stats['index_size']
         if chunk_count > 0:
-            chunk_button = st.button(
-                f"""
-                <div class="doc-count-btn">
-                    <div class="doc-count-label">片段数</div>
-                    <div class="doc-count-value">{chunk_count}</div>
-                </div>
-                """,
-                key="chunk-preview-btn",
-                on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview'),
-                use_container_width=True,
-                help="点击查看片段列表"
-            )
+            st.markdown(f"""
+            <div class="stat-card" onclick="document.getElementById('chunk-btn-hidden').click();">
+                <div class="stat-label">片段数</div>
+                <div class="stat-value">{chunk_count}</div>
+                <button id="chunk-btn-hidden" style="display: none;"></button>
+            </div>
+            """, unsafe_allow_html=True)
+            if st.button("", key="chunk-btn-hidden", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview')):
+                pass
         else:
             st.metric("片段数", chunk_count)
 
