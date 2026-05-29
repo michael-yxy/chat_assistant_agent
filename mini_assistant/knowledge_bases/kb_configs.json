@@ -8,5 +8,15 @@
     "rerank_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
     "recall_top_k": 20,
     "rerank_top_k": 5
+  },
+  "杨翔宇的工作知识库": {
+    "name": "杨翔宇的工作知识库",
+    "description": "日常工作知识库",
+    "chunk_size": 200,
+    "chunk_overlap": 30,
+    "embedding_model": "all-MiniLM-L6-v2",
+    "rerank_model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "recall_top_k": 20,
+    "rerank_top_k": 5
   }
 }

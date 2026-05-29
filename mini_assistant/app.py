@@ -337,6 +337,40 @@ def render_kb_manager_page():
             st.markdown("---")
 
 
+def get_current_kb_paths():
+    """获取当前知识库的路径配置"""
+    current_kb = st.session_state.get('current_kb', '默认知识库')
+    
+    if 'kb_manager' in st.session_state:
+        kb_manager = st.session_state.kb_manager
+        upload_path = kb_manager.get_kb_upload_path(current_kb)
+        vector_store_path = kb_manager.get_kb_vector_store_path(current_kb)
+        uploaded_files_path = upload_path.parent / "uploaded_files.json"
+    else:
+        upload_path = config.UPLOAD_DIR
+        vector_store_path = config.VECTOR_STORE_DIR
+        uploaded_files_path = config.UPLOADED_FILES_LIST
+    
+    return upload_path, vector_store_path, uploaded_files_path
+
+def load_kb_uploaded_files(uploaded_files_path):
+    """从文件中加载已上传的文件列表"""
+    if uploaded_files_path.exists():
+        try:
+            with open(uploaded_files_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading uploaded files: {e}")
+    return []
+
+def save_kb_uploaded_files(uploaded_files_path, files_list):
+    """保存已上传文件列表到文件"""
+    try:
+        with open(uploaded_files_path, 'w', encoding='utf-8') as f:
+            json.dump(files_list, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error saving uploaded files: {e}")
+
 def render_knowledge_base_section():
     st.markdown("### 📚 知识库管理")
     
@@ -349,6 +383,14 @@ def render_knowledge_base_section():
     current_kb = st.session_state.get('current_kb', '默认知识库')
     st.markdown(f"<small style='color: #666'>当前知识库: <strong>{current_kb}</strong></small>", unsafe_allow_html=True)
     st.markdown("---")
+    
+    # 获取当前知识库的路径
+    upload_path, vector_store_path, uploaded_files_path = get_current_kb_paths()
+    
+    # 加载当前知识库的已上传文件列表
+    if 'uploaded_files' not in st.session_state or st.session_state.get('last_kb') != current_kb:
+        st.session_state.uploaded_files = load_kb_uploaded_files(uploaded_files_path)
+        st.session_state.last_kb = current_kb
     
     uploaded_files = st.file_uploader(
         "上传文档",
@@ -370,7 +412,7 @@ def render_knowledge_base_section():
                         if uploaded_file.name in st.session_state.uploaded_files:
                             duplicate_files.append(uploaded_file.name)
                         else:
-                            save_path = config.UPLOAD_DIR / uploaded_file.name
+                            save_path = upload_path / uploaded_file.name
                             with open(save_path, 'wb') as f:
                                 f.write(uploaded_file.getbuffer())
                             saved_files.append(save_path)
@@ -390,7 +432,7 @@ def render_knowledge_base_section():
 
                     st.session_state.uploaded_files.extend(new_files)
                     # 保存已上传文件列表
-                    save_uploaded_files(st.session_state.uploaded_files)
+                    save_kb_uploaded_files(uploaded_files_path, st.session_state.uploaded_files)
 
                     st.success(f"""
                     ✅ 文档处理完成！
@@ -437,8 +479,8 @@ def render_knowledge_base_section():
                 with col1:
                     if st.button("✅ 确认删除", key="confirm_delete"):
                         try:
-                            # 删除物理文件
-                            file_path = config.UPLOAD_DIR / st.session_state.file_to_delete
+                            # 删除物理文件（使用当前知识库路径）
+                            file_path = upload_path / st.session_state.file_to_delete
                             if file_path.exists():
                                 file_path.unlink()
                             
@@ -447,12 +489,12 @@ def render_knowledge_base_section():
                             
                             # 重新构建向量索引（排除已删除的文件）
                             st.session_state.rag_engine.rebuild_index(
-                                [config.UPLOAD_DIR / f for f in st.session_state.uploaded_files 
-                                 if (config.UPLOAD_DIR / f).exists()]
+                                [upload_path / f for f in st.session_state.uploaded_files 
+                                 if (upload_path / f).exists()]
                             )
                             
-                            # 保存更新后的文件列表
-                            save_uploaded_files(st.session_state.uploaded_files)
+                            # 保存更新后的文件列表（使用当前知识库路径）
+                            save_kb_uploaded_files(uploaded_files_path, st.session_state.uploaded_files)
                             
                             # 清除缓存的统计信息
                             if 'kb_stats' in st.session_state:
