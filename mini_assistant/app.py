@@ -341,41 +341,62 @@ def render_knowledge_base_section():
         doc_count = stats['total_documents']
         if doc_count > 0:
             st.markdown(f"""
-            <div style="text-align: center; padding: 1rem; background-color: #f9f9f9; border-radius: 0.5rem;">
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">文档数</div>
-                <div style="font-size: 1.5rem; font-weight: 600;">
-                    <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('doc-preview-btn').click();">{doc_count}</a>
-                </div>
-            </div>
             <style>
-            button[data-testid="stButton"]#doc-preview-btn {{
-                display: none !important;
+            .doc-count-btn {{
+                width: 100%;
+                border: none;
+                background-color: #f9f9f9;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                cursor: pointer;
+            }}
+            .doc-count-btn:hover {{
+                background-color: #f0f0f0;
+            }}
+            .doc-count-label {{
+                font-size: 0.875rem;
+                color: #6b7280;
+                margin-bottom: 0.25rem;
+            }}
+            .doc-count-value {{
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #3b82f6;
+                text-decoration: underline;
             }}
             </style>
             """, unsafe_allow_html=True)
-            if st.button("", key="doc-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview')):
-                pass
+            
+            doc_button = st.button(
+                f"""
+                <div class="doc-count-btn">
+                    <div class="doc-count-label">文档数</div>
+                    <div class="doc-count-value">{doc_count}</div>
+                </div>
+                """,
+                key="doc-preview-btn",
+                on_click=lambda: setattr(st.session_state, 'page', 'doc_preview'),
+                use_container_width=True,
+                help="点击查看文档列表"
+            )
         else:
             st.metric("文档数", doc_count)
     
     with col2:
         chunk_count = stats['index_size']
         if chunk_count > 0:
-            st.markdown(f"""
-            <div style="text-align: center; padding: 1rem; background-color: #f9f9f9; border-radius: 0.5rem;">
-                <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.25rem;">片段数</div>
-                <div style="font-size: 1.5rem; font-weight: 600;">
-                    <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('chunk-preview-btn').click();">{chunk_count}</a>
+            chunk_button = st.button(
+                f"""
+                <div class="doc-count-btn">
+                    <div class="doc-count-label">片段数</div>
+                    <div class="doc-count-value">{chunk_count}</div>
                 </div>
-            </div>
-            <style>
-            button[data-testid="stButton"]#chunk-preview-btn {{
-                display: none !important;
-            }}
-            </style>
-            """, unsafe_allow_html=True)
-            if st.button("", key="chunk-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview')):
-                pass
+                """,
+                key="chunk-preview-btn",
+                on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview'),
+                use_container_width=True,
+                help="点击查看片段列表"
+            )
         else:
             st.metric("片段数", chunk_count)
 
