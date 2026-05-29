@@ -585,45 +585,8 @@ def main():
         
         st.markdown("---")
         
-        # 聊天界面
-        st.markdown("### 💬 对话")
-        render_chat_interface()
-        
-        # 添加CSS固定输入框和搜索开关在底部
-        st.markdown("""
-        <style>
-        div[data-testid="stChatInput"] {
-            position: fixed;
-            bottom: 1rem;
-            left: 20rem;
-            right: 32rem;
-            width: auto;
-            background: white;
-            padding: 0.5rem 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 100;
-        }
-        .search-toggle-section {
-            position: fixed; !important;
-            bottom: 1rem;
-            left: 20rem;
-            right: 32rem;
-            width: auto;
-            background: white;
-            padding: 8px 16px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            z-index: 99;
-            border-top: 1px solid #e0e0e0;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        user_input = st.chat_input(
-            "请输入您的问题，我会根据知识库为您解答",
-            key="user_input"
-        )
-        
-        st.markdown('<div class="search-toggle-section">', unsafe_allow_html=True)
+        # 搜索配置
+        st.markdown("### 🔍 搜索选项")
         col1, col2 = st.columns([1, 1])
         with col1:
             use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
@@ -631,7 +594,19 @@ def main():
         with col2:
             use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
             st.session_state.use_web_search = use_web_search
-        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
+        
+        st.markdown("---")
+        
+        # 聊天界面
+        st.markdown("### 💬 对话")
+        render_chat_interface()
+        
+        user_input = st.chat_input(
+            "请输入您的问题，我会根据知识库为您解答",
+            key="user_input"
+        )
         
         if user_input:
             st.session_state.chat_history.append({
@@ -691,35 +666,16 @@ def main():
                     except Exception as e:
                         result_queue.put(('search_error', str(e)))
                 
-                threads = []
-                
-                # 启动检索线程
+                # 优先进行知识库搜索
                 if use_rag:
                     think_buf = "🔍 正在检索知识库..."
                     think_placeholder.markdown(think_buf)
-                    retrieve_thread = threading.Thread(target=retrieve_docs)
-                    retrieve_thread.start()
-                    threads.append(retrieve_thread)
-                
-                # 启动搜索线程
-                if use_web_search:
-                    if think_buf:
-                        think_buf += "\n"
-                    think_buf += "🌐 正在进行联网搜索..."
-                    think_placeholder.markdown(think_buf)
-                    search_thread = threading.Thread(target=web_search)
-                    search_thread.start()
-                    threads.append(search_thread)
-                
-                # 等待所有线程完成
-                for t in threads:
-                    t.join()
-                
-                # 处理结果
-                while not result_queue.empty():
-                    result_type, data = result_queue.get()
-                    if result_type == 'retrieve' and data:
-                        retrieved_docs = data
+                    try:
+                        retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
+                            query=user_input,
+                            recall_top_k=st.session_state.recall_k,
+                            rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
+                        )
                         think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}条相关文档"
                         think_placeholder.markdown(think_buf)
                         sources.extend([
@@ -732,8 +688,24 @@ def main():
                             for doc in retrieved_docs
                         ])
                         contexts.extend([doc['content'] for doc in retrieved_docs])
-                    elif result_type == 'search' and data:
-                        search_results = data
+                    except Exception as e:
+                        think_buf += f"\n⚠️ 知识库检索失败: {str(e)}"
+                        think_placeholder.markdown(think_buf)
+                
+                # 知识库搜索完成后，再进行联网搜索
+                if use_web_search:
+                    if think_buf:
+                        think_buf += "\n"
+                    think_buf += "🌐 正在进行联网搜索..."
+                    think_placeholder.markdown(think_buf)
+                    try:
+                        searcher = WebSearch()
+                        num_results = st.session_state.get('search_results_count', 5)
+                        if num_results > 0:
+                            search_results = searcher.search_with_content(user_input, num_results=num_results)
+                        else:
+                            search_results = []
+                        
                         think_buf += f"\n✅ 联网搜索完成，获取到{len(search_results)}条结果：\n"
                         for r in search_results:
                             think_buf += f"- [{r['title']}]({r['url']})\n"
@@ -749,6 +721,9 @@ def main():
                             for r in search_results
                         ])
                         contexts.extend([f"【{r['title']}】\n{r['content']}" for r in search_results])
+                    except Exception as e:
+                        think_buf += f"\n⚠️ 联网搜索失败: {str(e)}"
+                        think_placeholder.markdown(think_buf)
                 
                 # 开始生成答案
                 if think_buf:

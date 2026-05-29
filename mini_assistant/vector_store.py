@@ -122,3 +122,37 @@ class VectorStore:
             'embedding_dim': self.embedding_dim,
             'index_size': self.index.ntotal if self.index else 0
         }
+    
+    def get_all_documents(self) -> List[str]:
+        """获取所有唯一的文档名称列表"""
+        self._ensure_loaded()
+        unique_sources = set()
+        for meta in self.metadata:
+            if 'source' in meta:
+                unique_sources.add(meta['source'])
+        return sorted(list(unique_sources))
+    
+    def get_chunks_by_document(self, document_name: str) -> List[Dict]:
+        """获取指定文档的所有片段"""
+        self._ensure_loaded()
+        chunks = []
+        for i, meta in enumerate(self.metadata):
+            if 'source' in meta and meta['source'] == document_name:
+                chunks.append({
+                    'content': self.documents[i],
+                    'metadata': meta,
+                    'index': i
+                })
+        return chunks
+    
+    def get_all_chunks(self) -> List[Dict]:
+        """获取所有片段"""
+        self._ensure_loaded()
+        chunks = []
+        for i, doc in enumerate(self.documents):
+            chunks.append({
+                'content': doc,
+                'metadata': self.metadata[i],
+                'index': i
+            })
+        return chunks

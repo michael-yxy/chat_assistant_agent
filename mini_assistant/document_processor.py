@@ -42,8 +42,21 @@ class DocumentProcessor:
         text = ""
         try:
             doc = Document(file_path)
+            # 处理段落
             for para in doc.paragraphs:
-                text += para.text + "\n"
+                if para.text.strip():
+                    text += para.text + "\n"
+            
+            # 处理表格
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = []
+                    for cell in row.cells:
+                        if cell.text.strip():
+                            row_text.append(cell.text.strip())
+                    if row_text:
+                        text += " | ".join(row_text) + "\n"
+                text += "\n"
         except Exception as e:
             logger.error(f"Error loading DOCX {file_path}: {e}")
         return text
