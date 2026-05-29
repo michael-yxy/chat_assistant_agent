@@ -1,8 +1,95 @@
 import streamlit as st
 import config
 import os
+import json
+import time
+import threading
+import queue
+from datetime import datetime
 
-os.environ["STREAMLIT_SERVER_PORT"] = "8501"
+from search import WebSearch
+
+# 会话管理
+SESSION_DIR = os.path.join(os.path.dirname(__file__), 'sessions')
+os.makedirs(SESSION_DIR, exist_ok=True)
+
+def load_sessions():
+    """加载所有会话列表"""
+    sessions = []
+    if os.path.exists(SESSION_DIR):
+        for filename in os.listdir(SESSION_DIR):
+            if filename.endswith('.json'):
+                session_id = filename[:-5]
+                filepath = os.path.join(SESSION_DIR, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                        sessions.append({
+                            'id': session_id,
+                            'title': data.get('title', '未命名会话'),
+                            'created_at': data.get('created_at', ''),
+                            'updated_at': data.get('updated_at', '')
+                        })
+                except Exception as e:
+                    print(f"Error loading session {session_id}: {e}")
+    # 按更新时间排序
+    sessions.sort(key=lambda x: x['updated_at'], reverse=True)
+    return sessions
+
+def load_session(session_id):
+    """加载指定会话"""
+    filepath = os.path.join(SESSION_DIR, f"{session_id}.json")
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading session {session_id}: {e}")
+    return None
+
+def save_session(session_id, chat_history, title=None):
+    """保存会话"""
+    filepath = os.path.join(SESSION_DIR, f"{session_id}.json")
+    session_data = {
+        'title': title or chat_history[0]['content'][:16] + '...' if chat_history else '未命名会话',
+        'chat_history': chat_history,
+        'created_at': datetime.now().isoformat() if not os.path.exists(filepath) else load_session(session_id).get('created_at', datetime.now().isoformat()),
+        'updated_at': datetime.now().isoformat()
+    }
+    try:
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(session_data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error saving session {session_id}: {e}")
+
+def delete_session(session_id):
+    """删除会话"""
+    filepath = os.path.join(SESSION_DIR, f"{session_id}.json")
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+def generate_session_id():
+    """生成会话ID"""
+    return datetime.now().strftime('%Y%m%d_%H%M%S')
+
+def load_uploaded_files():
+    """从文件中加载已上传的文件列表"""
+    if config.UPLOADED_FILES_LIST.exists():
+        try:
+            with open(config.UPLOADED_FILES_LIST, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading uploaded files: {e}")
+    return []
+
+def save_uploaded_files(files_list):
+    """保存已上传的文件列表到文件"""
+    try:
+        with open(config.UPLOADED_FILES_LIST, 'w', encoding='utf-8') as f:
+            json.dump(files_list, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Error saving uploaded files: {e}")
+
 def render_llm_config_section():
     st.markdown("### 🔧 LLM 配置")
     
@@ -97,17 +184,35 @@ def render_knowledge_base_section():
             with st.spinner("正在处理文档..."):
                 try:
                     saved_files = []
+                    duplicate_files = []
+                    new_files = []
+                    
                     for uploaded_file in uploaded_files:
-                        save_path = config.UPLOAD_DIR / uploaded_file.name
-                        with open(save_path, 'wb') as f:
-                            f.write(uploaded_file.getbuffer())
-                        saved_files.append(save_path)
-
+                        # 检查文件名是否重复
+                        if uploaded_file.name in st.session_state.uploaded_files:
+                            duplicate_files.append(uploaded_file.name)
+                        else:
+                            save_path = config.UPLOAD_DIR / uploaded_file.name
+                            with open(save_path, 'wb') as f:
+                                f.write(uploaded_file.getbuffer())
+                            saved_files.append(save_path)
+                            new_files.append(uploaded_file.name)
+                    
+                    # 显示重复文件警告
+                    if duplicate_files:
+                        st.warning(f"⚠️ 以下文件已存在，已跳过：{', '.join(duplicate_files)}")
+                    
+                    # 如果没有新文件，提示用户
+                    if not saved_files:
+                        st.info("💡 所有选择的文件都已存在，请选择其他文件上传")
+                        return
+                    
+                    # 处理新文件
                     result = st.session_state.rag_engine.add_documents(saved_files)
 
-                    st.session_state.uploaded_files.extend(
-                        [f.name for f in saved_files]
-                    )
+                    st.session_state.uploaded_files.extend(new_files)
+                    # 保存已上传文件列表
+                    save_uploaded_files(st.session_state.uploaded_files)
 
                     st.success(f"""
                     ✅ 文档处理完成！
@@ -116,14 +221,91 @@ def render_knowledge_base_section():
                     """)
                     if result['failed_files']:
                         st.warning(f"失败文件: {', '.join(result['failed_files'])}")
+                    
+                    # 清除缓存的统计信息并刷新页面
+                    if 'kb_stats' in st.session_state:
+                        del st.session_state.kb_stats
+                    st.rerun()
 
                 except Exception as e:
                     st.error(f"处理文档时出错: {str(e)}")
     
+    # 已上传文件管理
     if st.session_state.get('uploaded_files'):
-        with st.expander("📁 已上传文件", expanded=False):
-            for filename in st.session_state.uploaded_files[-10:]:
-                st.text(f"📄 {filename}")
+        with st.expander(f"📁 已上传文件 ({len(st.session_state.uploaded_files)})", expanded=False):
+            # 初始化删除状态
+            if 'file_to_delete' not in st.session_state:
+                st.session_state.file_to_delete = None
+            
+            # 计算动态高度（每行文件约35px）
+            file_count = len(st.session_state.uploaded_files)
+            display_files = st.session_state.uploaded_files[-10:]  # 只显示最后10个
+            dynamic_height = min(len(display_files) * 35 + 20, 200)  # 最多200px，最少显示所有文件
+            
+            # 创建可滚动容器
+            st.markdown(f"""
+            <style>
+            .file-list-container {{
+                max-height: {dynamic_height}px;
+                overflow-y: auto;
+            }}
+            </style>
+            """, unsafe_allow_html=True)
+            
+            # 显示要删除的文件确认对话框
+            if st.session_state.file_to_delete:
+                st.warning(f"⚠️ 确定要彻底删除文件 '{st.session_state.file_to_delete}' 吗？此操作不可恢复！")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("✅ 确认删除", key="confirm_delete"):
+                        try:
+                            # 删除物理文件
+                            file_path = config.UPLOAD_DIR / st.session_state.file_to_delete
+                            if file_path.exists():
+                                file_path.unlink()
+                            
+                            # 从已上传文件列表中删除
+                            st.session_state.uploaded_files.remove(st.session_state.file_to_delete)
+                            
+                            # 重新构建向量索引（排除已删除的文件）
+                            st.session_state.rag_engine.rebuild_index(
+                                [config.UPLOAD_DIR / f for f in st.session_state.uploaded_files 
+                                 if (config.UPLOAD_DIR / f).exists()]
+                            )
+                            
+                            # 保存更新后的文件列表
+                            save_uploaded_files(st.session_state.uploaded_files)
+                            
+                            # 清除缓存的统计信息
+                            if 'kb_stats' in st.session_state:
+                                del st.session_state.kb_stats
+                            
+                            st.success(f"✅ 文件 '{st.session_state.file_to_delete}' 已彻底删除")
+                            st.session_state.file_to_delete = None
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"删除文件时出错: {str(e)}")
+                            st.session_state.file_to_delete = None
+                
+                with col2:
+                    if st.button("❌ 取消", key="cancel_delete"):
+                        st.session_state.file_to_delete = None
+                        st.rerun()
+            else:
+                # 显示文件列表，使用容器实现滚动
+                with st.container():
+                    st.markdown('<div class="file-list-container">', unsafe_allow_html=True)
+                    
+                    for idx, filename in enumerate(display_files):
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            st.text(f"📄 {filename}")
+                        with col2:
+                            if st.button("🗑️", key=f"delete_btn_{idx}_{len(st.session_state.uploaded_files)}", help=f"删除 {filename}"):
+                                st.session_state.file_to_delete = filename
+                                st.rerun()
+                    
+                    st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("#### ⚙️ 检索设置")
@@ -141,7 +323,19 @@ def render_knowledge_base_section():
     
     st.markdown("---")
     st.markdown("#### 📊 知识库统计")
-    stats = st.session_state.rag_engine.get_stats()
+    
+    # 使用缓存来避免每次加载页面都触发VectorStore加载
+    if 'kb_stats' not in st.session_state:
+        st.session_state.kb_stats = st.session_state.rag_engine.get_stats()
+    else:
+        # 每30秒刷新一次统计
+        if 'stats_last_update' not in st.session_state or \
+           (time.time() - st.session_state.stats_last_update) > 30:
+            st.session_state.kb_stats = st.session_state.rag_engine.get_stats()
+            st.session_state.stats_last_update = time.time()
+    
+    stats = st.session_state.kb_stats
+    
     col1, col2 = st.columns(2)
     with col1:
         st.metric("文档数", stats['total_documents'])
@@ -152,10 +346,38 @@ def render_knowledge_base_section():
         st.info("💡 当前知识库为空，系统将以对话模式运行")
 
     if st.button("🗑️ 清空知识库", use_container_width=True):
-        st.session_state.rag_engine.reset()
-        st.session_state.uploaded_files = []
-        st.session_state.chat_history = []
-        st.success("知识库已清空")
+        try:
+            # 删除uploads目录下的所有文件
+            import shutil
+            for file_path in config.UPLOAD_DIR.glob('*'):
+                if file_path.is_file():
+                    file_path.unlink()
+            
+            # 删除vector_store目录下的所有文件
+            for file_path in config.VECTOR_STORE_DIR.glob('*'):
+                if file_path.is_file():
+                    file_path.unlink()
+            
+            # 重置RAG引擎
+            st.session_state.rag_engine.reset()
+            
+            # 清空会话状态
+            st.session_state.uploaded_files = []
+            st.session_state.chat_history = []
+            
+            # 清空已上传文件列表
+            save_uploaded_files([])
+            
+            # 清除缓存的统计信息
+            if 'kb_stats' in st.session_state:
+                del st.session_state.kb_stats
+            
+            st.success("✅ 知识库已彻底清空，所有文档和片段均已删除")
+            
+            # 刷新页面以显示最新统计
+            st.rerun()
+        except Exception as e:
+            st.error(f"清空知识库时出错: {str(e)}")
 
 
 def render_chat_interface():
@@ -179,12 +401,22 @@ def render_chat_interface():
                         for idx, source in enumerate(message['sources'], 1):
                             score_type = "相关度" if 'rerank_score' in source else "相似度"
                             score = source.get('rerank_score', source.get('distance', 0))
-                            st.markdown(f"""
-                            <div class="source-card">
-                                <strong>来源 {idx}:</strong> {source['source']} ({score_type}: {score:.4f})<br>
-                                <em>{source['content']}</em>
-                            </div>
-                            """, unsafe_allow_html=True)
+                            source_type = source.get('type', 'knowledge')
+                            
+                            if source_type == 'web' and source.get('url'):
+                                st.markdown(f"""
+                                <div class="source-card">
+                                    <strong>🌐 搜索结果 {idx}:</strong> <a href="{source['url']}" target="_blank">{source['source']}</a> ({score_type}: {score:.4f})<br>
+                                    <em>{source['content']}</em>
+                                </div>
+                                """, unsafe_allow_html=True)
+                            else:
+                                st.markdown(f"""
+                                <div class="source-card">
+                                    <strong>📄 来源 {idx}:</strong> {source['source']} ({score_type}: {score:.4f})<br>
+                                    <em>{source['content']}</em>
+                                </div>
+                                """, unsafe_allow_html=True)
 
 
 def main():
@@ -247,7 +479,7 @@ def main():
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
     if 'uploaded_files' not in st.session_state:
-        st.session_state.uploaded_files = []
+        st.session_state.uploaded_files = load_uploaded_files()
     if 'last_test_result' not in st.session_state:
         st.session_state.last_test_result = None
     if 'llm_base_url' not in st.session_state:
@@ -260,19 +492,90 @@ def main():
         st.session_state.rerank_k = 5
     if 'use_rerank' not in st.session_state:
         st.session_state.use_rerank = True
+    if 'use_web_search' not in st.session_state:
+        st.session_state.use_web_search = True
+    if 'use_knowledge_search' not in st.session_state:
+        st.session_state.use_knowledge_search = False
+    if 'search_results_count' not in st.session_state:
+        st.session_state.search_results_count = 5
+    if 'search_results' not in st.session_state:
+        st.session_state.search_results = []
     if 'rag_engine' not in st.session_state:
         from rag_engine import RAGEngine
-        st.session_state.rag_engine = RAGEngine()
-        st.session_state.last_test_result = st.session_state.rag_engine.test_current_connection()
+        from config import VECTOR_STORE_DIR
+        st.session_state.rag_engine = RAGEngine(vector_store_path=VECTOR_STORE_DIR)
+        # 不在初始化时测试连接，只在用户点击测试时才测试
+        st.session_state.last_test_result = None
+        
+        # 预热LLM客户端，避免第一次对话延迟
+        def warm_up_llm():
+            try:
+                import threading
+                def do_warmup():
+                    try:
+                        # 发送一个简单的请求来触发Ollama模型加载
+                        llm_client = st.session_state.rag_engine.llm_client
+                        # 发送一个简单的测试请求来预热模型
+                        for chunk in llm_client.chat_stream("hello"):
+                            if chunk.get("done"):
+                                break
+                    except Exception as e:
+                        pass
+                threading.Thread(target=do_warmup, daemon=True).start()
+            except:
+                pass
 
-    # 主界面布局
-    col1, col2 = st.columns([3, 1])
+    # 初始化会话状态
+    if 'current_session_id' not in st.session_state:
+        st.session_state.current_session_id = generate_session_id()
     
-    with col2:
-        # 侧边栏：知识库管理
-        render_knowledge_base_section()
+    # 加载会话列表
+    sessions = load_sessions()
+    
+    # 主界面布局：会话列表 + 主内容 + 知识库管理
+    col1, col2, col3 = st.columns([1, 3, 1])
     
     with col1:
+        # 左侧：会话历史列表
+        st.markdown("### 📋 会话历史")
+        
+        # 新建会话按钮
+        if st.button("➕ 新建会话", use_container_width=True):
+            st.session_state.current_session_id = generate_session_id()
+            st.session_state.chat_history = []
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # 会话列表
+        for session in sessions:
+            is_active = session['id'] == st.session_state.current_session_id
+            col_btn, col_del = st.columns([5, 1])
+            with col_btn:
+                if st.button(
+                    session['title'],
+                    key=f"session_{session['id']}",
+                    use_container_width=True,
+                    type="primary" if is_active else "secondary"
+                ):
+                    st.session_state.current_session_id = session['id']
+                    session_data = load_session(session['id'])
+                    if session_data:
+                        st.session_state.chat_history = session_data.get('chat_history', [])
+                    st.rerun()
+            with col_del:
+                if st.button("x", key=f"del_{session['id']}", use_container_width=True):
+                    delete_session(session['id'])
+                    if session['id'] == st.session_state.current_session_id:
+                        st.session_state.current_session_id = generate_session_id()
+                        st.session_state.chat_history = []
+                    st.rerun()
+    
+    with col3:
+        # 右侧：知识库管理
+        render_knowledge_base_section()
+    
+    with col2:
         # 主区域：LLM配置 + 聊天
         st.title("🤖 智能问答助手")
         st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
@@ -286,19 +589,31 @@ def main():
         st.markdown("### 💬 对话")
         render_chat_interface()
         
-        # 添加CSS固定输入框在底部，与上方按钮对齐
+        # 添加CSS固定输入框和搜索开关在底部
         st.markdown("""
         <style>
         div[data-testid="stChatInput"] {
             position: fixed;
             bottom: 1rem;
-            left: 5rem;
+            left: 20rem;
             right: 32rem;
             width: auto;
             background: white;
             padding: 0.5rem 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             z-index: 100;
+        }
+        .search-toggle-section {
+            position: fixed; !important;
+            bottom: 1rem;
+            left: 20rem;
+            right: 32rem;
+            width: auto;
+            background: white;
+            padding: 8px 16px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 99;
+            border-top: 1px solid #e0e0e0;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -307,6 +622,16 @@ def main():
             "请输入您的问题，我会根据知识库为您解答",
             key="user_input"
         )
+        
+        st.markdown('<div class="search-toggle-section">', unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
+            st.session_state.use_knowledge_search = use_knowledge_search
+        with col2:
+            use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
+            st.session_state.use_web_search = use_web_search
+        st.markdown('</div>', unsafe_allow_html=True)
         
         if user_input:
             st.session_state.chat_history.append({
@@ -318,6 +643,7 @@ def main():
             thinking_content = ""
             current_mode = "chat"
             sources = []
+            search_results = []
             
             with st.chat_message("assistant"):
                 with st.expander("🧠 思考过程（实时）", expanded=True):
@@ -328,43 +654,118 @@ def main():
                 think_buf = ""
                 answer_buf = ""
                 
+                # 检查知识库状态（这应该很快，因为统计已经缓存）
                 stats = st.session_state.rag_engine.vector_store.get_stats()
                 has_knowledge_base = stats['total_documents'] > 0
+                use_web_search = st.session_state.use_web_search
+                use_knowledge_search = st.session_state.use_knowledge_search
                 
-                if has_knowledge_base:
-                    retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
-                        query=user_input,
-                        recall_top_k=st.session_state.recall_k,
-                        rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
-                    )
-                    
-                    if retrieved_docs:
-                        current_mode = 'rag'
-                        sources = [
+                # 收集所有上下文（知识库 + 搜索结果）
+                contexts = []
+                retrieved_docs = None
+                search_results = []
+                use_rag = has_knowledge_base and use_knowledge_search
+                
+                result_queue = queue.Queue()
+                
+                def retrieve_docs():
+                    try:
+                        retrieved_docs = st.session_state.rag_engine.retriever.retrieve(
+                            query=user_input,
+                            recall_top_k=st.session_state.recall_k,
+                            rerank_top_k=st.session_state.rerank_k if st.session_state.use_rerank else st.session_state.recall_k
+                        )
+                        result_queue.put(('retrieve', retrieved_docs))
+                    except Exception as e:
+                        result_queue.put(('retrieve_error', str(e)))
+                
+                def web_search():
+                    try:
+                        searcher = WebSearch()
+                        num_results = st.session_state.get('search_results_count', 5)
+                        if num_results > 0:
+                            results = searcher.search_with_content(user_input, num_results=num_results)
+                            result_queue.put(('search', results))
+                        else:
+                            result_queue.put(('search', []))
+                    except Exception as e:
+                        result_queue.put(('search_error', str(e)))
+                
+                threads = []
+                
+                # 启动检索线程
+                if use_rag:
+                    think_buf = "🔍 正在检索知识库..."
+                    think_placeholder.markdown(think_buf)
+                    retrieve_thread = threading.Thread(target=retrieve_docs)
+                    retrieve_thread.start()
+                    threads.append(retrieve_thread)
+                
+                # 启动搜索线程
+                if use_web_search:
+                    if think_buf:
+                        think_buf += "\n"
+                    think_buf += "🌐 正在进行联网搜索..."
+                    think_placeholder.markdown(think_buf)
+                    search_thread = threading.Thread(target=web_search)
+                    search_thread.start()
+                    threads.append(search_thread)
+                
+                # 等待所有线程完成
+                for t in threads:
+                    t.join()
+                
+                # 处理结果
+                while not result_queue.empty():
+                    result_type, data = result_queue.get()
+                    if result_type == 'retrieve' and data:
+                        retrieved_docs = data
+                        think_buf += f"\n✅ 知识库检索完成，获取到{len(retrieved_docs)}条相关文档"
+                        think_placeholder.markdown(think_buf)
+                        sources.extend([
                             {
                                 'content': doc['content'][:200] + "..." if len(doc['content']) > 200 else doc['content'],
                                 'source': doc['metadata']['source'],
-                                'score': doc.get('rerank_score', doc.get('distance', 0))
+                                'score': doc.get('rerank_score', doc.get('distance', 0)),
+                                'type': 'knowledge'
                             }
                             for doc in retrieved_docs
-                        ]
-                        contexts = [doc['content'] for doc in retrieved_docs]
-                        
-                        for chunk in st.session_state.rag_engine.llm_client.generate_with_context_stream(
-                            query=user_input,
-                            context=contexts
-                        ):
-                            if chunk.get("thinking"):
-                                think_buf += chunk["thinking"]
-                                think_placeholder.markdown(think_buf)
-                            if chunk.get("content"):
-                                answer_buf += chunk["content"]
-                                answer_box.markdown(answer_buf)
-                            
-                            if chunk.get("done"):
-                                break
+                        ])
+                        contexts.extend([doc['content'] for doc in retrieved_docs])
+                    elif result_type == 'search' and data:
+                        search_results = data
+                        think_buf += f"\n✅ 联网搜索完成，获取到{len(search_results)}条结果：\n"
+                        for r in search_results:
+                            think_buf += f"- [{r['title']}]({r['url']})\n"
+                        think_placeholder.markdown(think_buf)
+                        sources.extend([
+                            {
+                                'content': r['content'][:200] + "..." if len(r['content']) > 200 else r['content'],
+                                'source': r['title'],
+                                'url': r['url'],
+                                'score': 1.0 - (r['rank'] * 0.1),
+                                'type': 'web'
+                            }
+                            for r in search_results
+                        ])
+                        contexts.extend([f"【{r['title']}】\n{r['content']}" for r in search_results])
+                
+                # 开始生成答案
+                if think_buf:
+                    think_buf += "\n\n"
+                think_buf += "🧠 正在分析并生成答案..."
+                think_placeholder.markdown(think_buf)
+                
+                # 根据上下文生成答案
+                if contexts:
+                    for chunk in st.session_state.rag_engine.llm_client.generate_with_context_stream(query=user_input, context=contexts):
+                        if chunk.get("thinking"):
+                            think_buf += chunk["thinking"]
+                            think_placeholder.markdown(think_buf)
+                        if chunk.get("content"):
+                            answer_buf += chunk["content"]
+                            answer_box.markdown(answer_buf)
                 else:
-                    current_mode = 'chat'
                     for chunk in st.session_state.rag_engine.llm_client.chat_stream(query=user_input):
                         if chunk.get("thinking"):
                             think_buf += chunk["thinking"]
@@ -372,9 +773,6 @@ def main():
                         if chunk.get("content"):
                             answer_buf += chunk["content"]
                             answer_box.markdown(answer_buf)
-                            
-                        if chunk.get("done"):
-                            break
             
             full_response = answer_buf
             
@@ -383,8 +781,12 @@ def main():
                 'content': full_response,
                 'thinking': think_buf,
                 'mode': current_mode,
-                'sources': sources
+                'sources': sources,
+                'search_results': search_results
             })
+            
+            # 保存会话
+            save_session(st.session_state.current_session_id, st.session_state.chat_history)
 
 
 if __name__ == '__main__':

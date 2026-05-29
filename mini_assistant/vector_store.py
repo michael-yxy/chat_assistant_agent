@@ -15,9 +15,12 @@ class VectorStore:
         self.index = None
         self.documents = []
         self.metadata = []
+        self._loaded = False
 
-        if store_path and (store_path / "index.faiss").exists():
+    def _ensure_loaded(self):
+        if not self._loaded and self.store_path and (self.store_path / "index.faiss").exists():
             self.load()
+            self._loaded = True
 
     def add_documents(self, embeddings: np.ndarray, documents: List[Dict]):
         if len(embeddings) == 0:
@@ -35,8 +38,17 @@ class VectorStore:
 
         self.documents.extend([doc['content'] for doc in documents])
         self.metadata.extend([doc['metadata'] for doc in documents])
+    
+    def reset(self):
+        """重置向量存储"""
+        self.index = None
+        self.documents = []
+        self.metadata = []
+        self._loaded = False
+        logger.info("Vector store reset successfully")
 
     def search(self, query_embedding: np.ndarray, top_k: int = 5) -> List[Dict]:
+        self._ensure_loaded()
         if self.index is None or self.index.ntotal == 0:
             return []
 
@@ -99,8 +111,14 @@ class VectorStore:
             self.metadata = []
 
     def get_stats(self) -> Dict:
+        self._ensure_loaded()
+        unique_sources = set()
+        for meta in self.metadata:
+            if 'source' in meta:
+                unique_sources.add(meta['source'])
+        
         return {
-            'total_documents': len(self.documents),
+            'total_documents': len(unique_sources),
             'embedding_dim': self.embedding_dim,
             'index_size': self.index.ntotal if self.index else 0
         }

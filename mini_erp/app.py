@@ -310,7 +310,8 @@ def view_inventory():
             st.markdown("### 📈 库存ABC分类分析")
             
             if not sales.empty:
-                merged = products.merge(sales, on='product_id', how='left').fillna(0)
+                # 确保列名匹配，使用left_on和right_on
+                merged = products.merge(sales, left_on='id', right_on='product_id', how='left').fillna(0)
                 merged['turnover_value'] = merged['total_sold'] * merged['cost']
                 merged = merged.sort_values('turnover_value', ascending=False)
                 merged['cumulative_pct'] = merged['turnover_value'].cumsum() / merged['turnover_value'].sum() * 100

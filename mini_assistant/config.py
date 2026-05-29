@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 VECTOR_STORE_DIR = BASE_DIR / "vector_store"
 MODELS_DIR = BASE_DIR / "models"
+UPLOADED_FILES_LIST = BASE_DIR / "uploaded_files.json"
 
 for dir_path in [UPLOAD_DIR, VECTOR_STORE_DIR, MODELS_DIR]:
     dir_path.mkdir(exist_ok=True)

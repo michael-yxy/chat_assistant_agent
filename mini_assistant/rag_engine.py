@@ -27,37 +27,66 @@ class RAGEngine:
             chunk_overlap=chunk_overlap
         )
 
-        logger.info("Initializing embedding model...")
-        self.embedding_model = EmbeddingModel(model_name=embedding_model_name)
+        self.embedding_model_name = embedding_model_name
+        self.rerank_model_name = rerank_model_name
+        
+        # 延迟加载模型
+        self._embedding_model = None
+        self._reranker_model = None
 
-        logger.info("Initializing reranker model...")
-        try:
-            self.reranker_model = RerankerModel(model_name=rerank_model_name)
-        except Exception as e:
-            logger.warning(f"Failed to load reranker model: {e}. Reranking will be disabled.")
-            self.reranker_model = None
-
-        embedding_dim = self.embedding_model.get_dimension()
+        # VectorStore不需要延迟加载，因为它只是加载已保存的索引
         self.vector_store = VectorStore(
-            embedding_dim=embedding_dim,
+            embedding_dim=384,  # all-MiniLM-L6-v2的维度
             store_path=vector_store_path
         )
 
-        self.retriever = Retriever(
-            vector_store=self.vector_store,
-            embedding_model=self.embedding_model,
-            reranker_model=self.reranker_model
-        )
+        # 延迟创建retriever
+        self._retriever = None
 
-        logger.info("Initializing LLM client...")
-        self.llm_client = LLMClient(
-            base_url=llm_base_url,
-            model=llm_model
-        )
+        # 延迟创建LLM客户端
+        self._llm_client = None
         
         # 保存配置
         self.llm_base_url = llm_base_url
         self.llm_model = llm_model
+    
+    @property
+    def embedding_model(self):
+        if self._embedding_model is None:
+            logger.info("Initializing embedding model...")
+            self._embedding_model = EmbeddingModel(model_name=self.embedding_model_name)
+        return self._embedding_model
+    
+    @property
+    def reranker_model(self):
+        if self._reranker_model is None:
+            logger.info("Initializing reranker model...")
+            try:
+                self._reranker_model = RerankerModel(model_name=self.rerank_model_name)
+            except Exception as e:
+                logger.warning(f"Failed to load reranker model: {e}. Reranking will be disabled.")
+                self._reranker_model = None
+        return self._reranker_model
+    
+    @property
+    def retriever(self):
+        if self._retriever is None:
+            self._retriever = Retriever(
+                vector_store=self.vector_store,
+                embedding_model=self.embedding_model,
+                reranker_model=self.reranker_model
+            )
+        return self._retriever
+    
+    @property
+    def llm_client(self):
+        if self._llm_client is None:
+            logger.info("Initializing LLM client...")
+            self._llm_client = LLMClient(
+                base_url=self.llm_base_url,
+                model=self.llm_model
+            )
+        return self._llm_client
 
     def update_llm_config(self, base_url: str, model: str) -> Dict:
         """更新LLM配置"""
@@ -136,6 +165,54 @@ class RAGEngine:
 
         self.vector_store.save()
 
+        return {
+            'total_chunks': total_chunks,
+            'successful_files': successful_files,
+            'failed_files': failed_files
+        }
+    
+    def rebuild_index(self, file_paths: List[Path]) -> Dict:
+        """重新构建向量索引，删除不存在的文件的索引"""
+        # 重置向量存储
+        self.vector_store.reset()
+        
+        total_chunks = 0
+        successful_files = []
+        failed_files = []
+        
+        # 重新处理所有文件
+        for file_path in file_paths:
+            if not file_path.exists():
+                logger.warning(f"File not found: {file_path}")
+                failed_files.append(file_path.name)
+                continue
+                
+            try:
+                documents = self.doc_processor.process_file(file_path)
+                
+                if documents:
+                    embeddings = self.embedding_model.encode(
+                        [doc['content'] for doc in documents]
+                    )
+                    
+                    self.vector_store.add_documents(embeddings, documents)
+                    total_chunks += len(documents)
+                    successful_files.append(file_path.name)
+                    
+                    logger.info(f"Rebuilt {len(documents)} chunks from {file_path.name}")
+                else:
+                    failed_files.append(file_path.name)
+                    
+            except Exception as e:
+                logger.error(f"Error rebuilding {file_path}: {e}")
+                failed_files.append(file_path.name)
+        
+        # 保存重建后的索引
+        self.vector_store.save()
+        
+        # 标记为已加载，避免get_stats时重新加载旧数据
+        self.vector_store._loaded = True
+        
         return {
             'total_chunks': total_chunks,
             'successful_files': successful_files,
