@@ -339,25 +339,23 @@ def render_knowledge_base_section():
     col1, col2 = st.columns(2)
     with col1:
         st.metric("文档数", stats['total_documents'])
-        if stats['total_documents'] > 0:
-            st.markdown("""
-            <style>
-            .nav-btn {
-                font-size: 0.8rem !important;
-                padding: 0.3rem 0.6rem !important;
-            }
-            </style>
-            """, unsafe_allow_html=True)
-            if st.button("📋 文档列表", key="doc-btn", use_container_width=True):
-                st.session_state.page = 'doc_preview'
-                st.rerun()
     
     with col2:
         st.metric("片段数", stats['index_size'])
-        if stats['index_size'] > 0:
-            if st.button("📋 片段列表", key="chunk-btn", use_container_width=True):
-                st.session_state.page = 'chunk_preview'
-                st.rerun()
+    
+    if stats['total_documents'] > 0 or stats['index_size'] > 0:
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if stats['total_documents'] > 0:
+                if st.button("📋 文档列表", key="doc-btn", use_container_width=True):
+                    st.session_state.page = 'doc_preview'
+                    st.rerun()
+        
+        with col_btn2:
+            if stats['index_size'] > 0:
+                if st.button("📋 片段列表", key="chunk-btn", use_container_width=True):
+                    st.session_state.page = 'chunk_preview'
+                    st.rerun()
 
     if stats['total_documents'] == 0:
         st.info("💡 当前知识库为空，系统将以对话模式运行")
