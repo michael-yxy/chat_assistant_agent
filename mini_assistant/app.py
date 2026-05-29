@@ -347,8 +347,14 @@ def render_knowledge_base_section():
                     <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('doc-preview-btn').click();">{doc_count}</a>
                 </div>
             </div>
+            <style>
+            button[data-testid="stButton"]#doc-preview-btn {{
+                display: none !important;
+            }}
+            </style>
             """, unsafe_allow_html=True)
-            st.button("", key="doc-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview'), style={"display": "none"})
+            if st.button("", key="doc-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'doc_preview')):
+                pass
         else:
             st.metric("文档数", doc_count)
     
@@ -362,8 +368,14 @@ def render_knowledge_base_section():
                     <a href="javascript:void(0);" style="color: #3b82f6; text-decoration: underline; cursor: pointer;" onclick="document.getElementById('chunk-preview-btn').click();">{chunk_count}</a>
                 </div>
             </div>
+            <style>
+            button[data-testid="stButton"]#chunk-preview-btn {{
+                display: none !important;
+            }}
+            </style>
             """, unsafe_allow_html=True)
-            st.button("", key="chunk-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview'), style={"display": "none"})
+            if st.button("", key="chunk-preview-btn", on_click=lambda: setattr(st.session_state, 'page', 'chunk_preview')):
+                pass
         else:
             st.metric("片段数", chunk_count)
 
