@@ -819,9 +819,6 @@ def main():
     if 'sidebar_collapsed' not in st.session_state:
         st.session_state.sidebar_collapsed = False
     
-    # 用户输入（两种状态共用）
-    user_input = None
-    
     # 根据折叠状态调整布局
     if st.session_state.sidebar_collapsed:
         # 折叠状态：两列布局（主内容 + 知识库管理）
@@ -863,11 +860,6 @@ def main():
             # 聊天界面
             st.markdown("### 💬 对话")
             render_chat_interface()
-            
-            user_input = st.chat_input(
-                "请输入您的问题，我会根据知识库为您解答",
-                key="user_input"
-            )
     else:
         # 展开状态：三列布局（会话列表 + 主内容 + 知识库管理）
         col1, col2, col3 = st.columns([1, 3, 1])
@@ -946,11 +938,12 @@ def main():
             # 聊天界面
             st.markdown("### 💬 对话")
             render_chat_interface()
-            
-            user_input = st.chat_input(
-                "请输入您的问题，我会根据知识库为您解答",
-                key="user_input"
-            )
+    
+    # 用户输入固定在底部（两种状态共用）
+    user_input = st.chat_input(
+        "请输入您的问题，我会根据知识库为您解答",
+        key="user_input"
+    )
     
     # 用户输入处理（两种状态共用）
     if user_input:
