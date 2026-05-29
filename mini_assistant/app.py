@@ -821,22 +821,37 @@ def main():
     
     # 根据折叠状态计算主内容占比，用于设置输入框宽度
     if st.session_state.sidebar_collapsed:
-        # 折叠状态：主内容占 3/4
+        # 折叠状态：主内容占 3/4，输入框靠左
         main_content_ratio = 0.75
+        input_align_left = True
     else:
-        # 展开状态：主内容占 3/5
+        # 展开状态：主内容占 3/5，输入框居中
         main_content_ratio = 0.6
+        input_align_left = False
     
-    # 添加自定义 CSS 控制输入框宽度
-    st.markdown(f"""
-    <style>
-    .stChatInput {{
-        max-width: {main_content_ratio * 100}% !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
+    # 添加自定义 CSS 控制输入框宽度和对齐
+    if input_align_left:
+        # 折叠时靠左对齐，与主内容列位置匹配
+        st.markdown(f"""
+        <style>
+        .stChatInput {{
+            max-width: {main_content_ratio * 100}% !important;
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        # 展开时居中对齐
+        st.markdown(f"""
+        <style>
+        .stChatInput {{
+            max-width: {main_content_ratio * 100}% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }}
+        </style>
+        """, unsafe_allow_html=True)
     
     # 根据折叠状态调整布局
     if st.session_state.sidebar_collapsed:
