@@ -5,12 +5,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class WebSearch:
     def __init__(self):
         self.client = httpx.Client(timeout=30.0, follow_redirects=True)
     
     def search(self, query: str, num_results: int = 5) -> List[Dict]:
-        """使用百度搜索获取结果"""
         results = []
         try:
             url = "https://www.baidu.com/s"
@@ -95,7 +95,6 @@ class WebSearch:
         return results
     
     def fetch_page_content(self, url: str, max_length: int = 1000) -> str:
-        """获取网页内容"""
         try:
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -119,7 +118,6 @@ class WebSearch:
             return ""
     
     def search_with_content(self, query: str, num_results: int = 3) -> List[Dict]:
-        """搜索并获取网页内容"""
         results = self.search(query, num_results)
         
         for result in results:
@@ -127,14 +125,13 @@ class WebSearch:
             result['content'] = content
         
         return results
-
-
-if __name__ == "__main__":
-    searcher = WebSearch()
-    results = searcher.search_with_content("今天北京天气", num_results=3)
-    print(f"搜索结果数量: {len(results)}")
-    for r in results:
-        print(f"\n标题: {r['title']}")
-        print(f"链接: {r['url']}")
-        print(f"摘要: {r['summary']}")
-        print(f"内容预览: {r['content'][:100]}..." if r['content'] else "无内容")
+    
+    def close(self):
+        self.client.close()
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False

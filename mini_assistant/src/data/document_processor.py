@@ -1,7 +1,7 @@
 import pdfplumber
 from docx import Document
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Union
 import logging
 import io
 
@@ -41,10 +41,8 @@ class DocumentProcessor:
         try:
             with pdfplumber.open(file_path) as pdf:
                 for page in pdf.pages:
-                    # 首先尝试常规文本提取
                     page_text = page.extract_text()
                     
-                    # 如果没有提取到文本，尝试OCR
                     if not page_text or page_text.strip() == "":
                         page_text = self._extract_text_with_ocr(page)
                     
@@ -55,39 +53,31 @@ class DocumentProcessor:
         return text
     
     def _extract_text_with_ocr(self, page) -> str:
-        """使用OCR从PDF页面提取文本"""
         if not OCR_AVAILABLE:
             logger.warning("OCR not available, cannot extract text from image-based PDF")
             return ""
         
         text = ""
         try:
-            # 提取页面上的所有图像
             images = page.images
             
             if not images:
                 return ""
             
-            # 按垂直位置排序图像（从上到下）
             images.sort(key=lambda img: -img['top'])
             
             for img in images:
                 try:
-                    # 获取图像数据（使用pdfplumber的to_image方法）
                     img_obj = page.to_image(resolution=300).original
                     
-                    # 处理CMYK颜色空间
                     if img_obj.mode == 'CMYK':
                         img_obj = img_obj.convert('RGB')
                     
-                    # 使用pytesseract进行OCR
-                    # 将图像转换为灰度以提高OCR准确性
                     img_gray = img_obj.convert('L')
                     img_text = pytesseract.image_to_string(img_gray, lang='chi_sim+eng')
                     
                     if img_text and img_text.strip():
                         text += img_text + "\n"
-                        # 只处理第一个图像（通常是整个页面）
                         break
                 except Exception as img_e:
                     logger.warning(f"Error processing image: {img_e}")
@@ -102,12 +92,10 @@ class DocumentProcessor:
         text = ""
         try:
             doc = Document(file_path)
-            # 处理段落
             for para in doc.paragraphs:
                 if para.text.strip():
                     text += para.text + "\n"
             
-            # 处理表格
             for table in doc.tables:
                 for row in table.rows:
                     row_text = []
@@ -167,8 +155,7 @@ class DocumentProcessor:
 
         return chunks
 
-    def process_file(self, file_path) -> List[Dict]:
-        # 确保 file_path 是 Path 对象
+    def process_file(self, file_path: Union[str, Path]) -> List[Dict]:
         if isinstance(file_path, str):
             file_path = Path(file_path)
         

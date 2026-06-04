@@ -11,12 +11,31 @@ class LLMClient:
         self,
         base_url: str = "http://localhost:11434/v1",
         model: str = "qwen3.6:35b-a3b-q8_0",
-        api_key: str = "ollama"
+        api_key: str = "ollama",
+        max_history_messages: int = 20,
+        max_history_tokens: int = 8192
     ):
         self.base_url = base_url
         self.model = model
         self.api_key = api_key
         self.client = httpx.Client(timeout=300.0)
+        self.history: List[Dict] = []
+        self.max_history_messages = max_history_messages
+        self.max_history_tokens = max_history_tokens
+    
+    def _count_tokens(self, text: str) -> int:
+        return len(text) // 4
+    
+    def _trim_history(self):
+        if len(self.history) > self.max_history_messages:
+            self.history = self.history[-self.max_history_messages:]
+            logger.info(f"Trimmed history to {self.max_history_messages} messages")
+        
+        total_tokens = sum(self._count_tokens(msg.get("content", "")) for msg in self.history)
+        while total_tokens > self.max_history_tokens and len(self.history) > 0:
+            removed_msg = self.history.pop(0)
+            total_tokens -= self._count_tokens(removed_msg.get("content", ""))
+            logger.info(f"Removed message due to token limit, remaining tokens: {total_tokens}")
 
     def generate(
         self,
@@ -72,36 +91,28 @@ class LLMClient:
         context: List[str],
         system_prompt: Optional[str] = None
     ) -> str:
-        context_text = "\n\n".join([f"[Document {i+1}]:\n{doc}" for i, doc in enumerate(context)])
+        context_text = "\n\n".join([f"【文档 {i+1}】：\n{doc}" for i, doc in enumerate(context)])
 
         if system_prompt is None:
-            system_prompt = """You are a helpful AI assistant. You will be given a question and relevant context from documents. 
+            system_prompt = """你是一名实用的人工智能助手。你将收到一个问题以及来自文档的相关上下文信息。
 
-Your task:
-1. Answer the question based ONLY on the provided context
-2. If the context doesn't contain enough information to fully answer the question, clearly state what information is available
-3. Be precise and cite which document(s) support your answer when possible
-4. If you cannot find relevant information in the context, say so
-
-IMPORTANT: Do not make up information that is not present in the context.
-
-你是一名实用的人工智能助手。你将收到一个问题以及来自文档的相关上下文信息。
 你的任务：
-仅依据所提供的上下文回答问题
-若上下文信息不足以完整回答问题，需清晰说明现有可用信息
-回答需精准，尽可能标注支撑答案的文档来源
-若在上下文中未找到相关信息，直接说明即可
+1. 仅依据所提供的上下文回答问题
+2. 若上下文信息不足以完整回答问题，需清晰说明现有可用信息
+3. 回答需精准，尽可能标注支撑答案的文档来源
+4. 若在上下文中未找到相关信息，直接说明即可
+
 重要要求：不得编造上下文中不存在的信息。
 
 使用中文输出思考过程。
 """
 
-        prompt = f"""Context:
+        prompt = f"""上下文信息：
 {context_text}
 
-Question: {query}
+问题：{query}
 
-Please provide a helpful answer based on the context above."""
+请根据以上上下文提供有帮助的回答。"""
 
         return self.generate(prompt, system_prompt=system_prompt)
 
@@ -139,23 +150,44 @@ Please provide a helpful answer based on the context above."""
         system_prompt: Optional[str] = None,
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        think: bool = True
+        think: bool = True,
+        use_history: bool = True,
+        feedback_history: Optional[List[Dict]] = None
     ):
-        """流式生成回答 - 使用 Ollama /api/chat API，支持实时思考过程"""
         messages = []
+
+        feedback_prompt = ""
+        if feedback_history and len(feedback_history) > 0:
+            feedback_items = []
+            for i, feedback in enumerate(feedback_history[-5:]):
+                user_query = feedback.get('query', '')
+                assistant_response = feedback.get('response', '')
+                rating = feedback.get('rating', 0)
+                if rating > 0:
+                    feedback_items.append(f"【好评示例{i+1}】\n用户问：{user_query}\n你的回答：{assistant_response}\n用户评价：有用（点赞）")
+                elif rating < 0:
+                    feedback_items.append(f"【改进示例{i+1}】\n用户问：{user_query}\n你的回答：{assistant_response}\n用户评价：无用（点踩），请改进回答方式")
+            
+            if feedback_items:
+                feedback_prompt = "\n\n以下是用户对之前回答的反馈，请注意学习：\n" + "\n\n".join(feedback_items)
+                logger.info(f"Added feedback prompt with {len(feedback_items)} feedback items")
 
         if system_prompt:
             messages.append({
                 "role": "system",
-                "content": system_prompt
+                "content": system_prompt + feedback_prompt
             })
+
+        if use_history and self.history:
+            logger.info(f"Adding {len(self.history)} history messages")
+            messages.extend(self.history)
 
         messages.append({
             "role": "user",
             "content": prompt
         })
 
-        # 使用 Ollama /api/chat API
+        logger.info(f"Total messages in request: {len(messages)}")
         base_url_no_v1 = self.base_url.replace("/v1", "")
         api_url = f"{base_url_no_v1}/api/chat"
         
@@ -183,6 +215,7 @@ Please provide a helpful answer based on the context above."""
                 response.raise_for_status()
                 logger.info("Connected to streaming API, waiting for chunks...")
                 
+                full_content = ""
                 for line in response.iter_lines():
                     if not line:
                         continue
@@ -190,15 +223,20 @@ Please provide a helpful answer based on the context above."""
                     try:
                         chunk = json.loads(line)
                         msg = chunk.get("message") or {}
+                        content = msg.get("content", "")
+                        full_content += content
                         
                         yield {
-                            "content": msg.get("content", ""),
+                            "content": content,
                             "thinking": msg.get("thinking", ""),
                             "done": chunk.get("done", False)
                         }
                         
                         if chunk.get("done"):
-                            logger.info("Received done, stream completed")
+                            self.history.append({"role": "user", "content": prompt})
+                            self.history.append({"role": "assistant", "content": full_content})
+                            self._trim_history()
+                            logger.info(f"Received done, stream completed. History has {len(self.history)} messages")
                             return
                             
                     except json.JSONDecodeError as e:
@@ -215,43 +253,44 @@ Please provide a helpful answer based on the context above."""
     def chat_stream(
         self,
         query: str,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        think: bool = True,
+        use_history: bool = True,
+        feedback_history: Optional[List[Dict]] = None
     ):
-        """流式聊天 - 使用 Ollama /api/chat API"""
         if system_prompt is None:
-            system_prompt = """你是一个有深度思考能力的AI助手。请根据用户的问题给出准确、详细的回答。"""
+            system_prompt = """你是一个有深度思考能力的AI助手。请根据用户的问题给出准确、详细的回答。深度思考过程必须全部使用中文，禁止使用任何英文。"""
 
-        return self.generate_stream(query, system_prompt=system_prompt, think=True)
+        return self.generate_stream(query, system_prompt=system_prompt, think=think, use_history=use_history, feedback_history=feedback_history)
     
     def generate_with_context_stream(
         self,
         query: str,
         context: List[str],
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        think: bool = True,
+        use_history: bool = True,
+        feedback_history: Optional[List[Dict]] = None
     ):
-        """流式生成带上下文的回答 - 使用 Ollama /api/chat API"""
-        context_text = "\n\n".join([f"[Document {i+1}]:\n{doc}" for i, doc in enumerate(context)])
+        context_text = "\n\n".join([f"【文档 {i+1}】：\n{doc}" for i, doc in enumerate(context)])
 
         if system_prompt is None:
-            system_prompt = """你是一个有深度思考能力的AI助手。请根据提供的上下文信息，回答用户的问题。如果上下文不足以回答问题，请明确说明。"""
+            system_prompt = f"""你是一个有深度思考能力的AI助手。请根据提供的上下文信息，回答用户的问题。如果上下文不足以回答问题，请明确说明。深度思考过程必须全部使用中文，禁止使用任何英文。
 
-        prompt = f"""Context:
-{context_text}
+上下文信息：
+{context_text}"""
 
-Question: {query}
+        return self.generate_stream(query, system_prompt=system_prompt, think=think, use_history=use_history, feedback_history=feedback_history)
 
-Please provide a helpful answer based on the context above."""
-
-        return self.generate_stream(prompt, system_prompt=system_prompt)
-
+    def clear_history(self):
+        self.history = []
+    
     def test_connection(self, model_name: Optional[str] = None) -> Dict:
-        """测试与LLM服务的连接，可指定模型名称"""
         target_model = model_name if model_name else self.model
         
         try:
             base_url_no_v1 = self.base_url.replace("/v1", "")
             
-            # 第一步：获取模型列表验证服务是否运行
             model_list_response = self.client.get(
                 f"{base_url_no_v1}/api/tags",
                 timeout=5.0
@@ -267,7 +306,6 @@ Please provide a helpful answer based on the context above."""
             model_data = model_list_response.json()
             available_models = [m.get("name", "") for m in model_data.get("models", [])]
             
-            # 检查模型是否在列表中
             if target_model not in available_models:
                 return {
                     "success": False,
@@ -275,7 +313,6 @@ Please provide a helpful answer based on the context above."""
                     "status": "model_not_found"
                 }
             
-            # 第二步：真正发送请求测试模型是否能正常响应
             test_payload = {
                 "model": target_model,
                 "messages": [{"role": "user", "content": "Hello"}],
@@ -340,7 +377,6 @@ Please provide a helpful answer based on the context above."""
             }
 
     def get_available_models(self) -> List[str]:
-        """获取Ollama中可用的模型列表"""
         try:
             base_url_no_v1 = self.base_url.replace("/v1", "")
             response = self.client.get(
@@ -364,6 +400,13 @@ Please provide a helpful answer based on the context above."""
 
     def close(self):
         self.client.close()
+    
+    def __enter__(self):
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
 
 def create_llm_client(

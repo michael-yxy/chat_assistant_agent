@@ -1,11 +1,12 @@
 from pathlib import Path
 from typing import List, Dict, Optional
 import numpy as np
-from document_processor import DocumentProcessor
-from embeddings import EmbeddingModel, RerankerModel
-from vector_store import VectorStore
-from retriever import Retriever
-from llm import LLMClient
+from src.data.document_processor import DocumentProcessor
+from src.models.embeddings import EmbeddingModel, RerankerModel
+from src.data.vector_store import VectorStore
+from src.models.retriever import Retriever
+from src.models.llm import LLMClient
+from src.config.settings import EMBEDDING_DIM
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,23 +31,17 @@ class RAGEngine:
         self.embedding_model_name = embedding_model_name
         self.rerank_model_name = rerank_model_name
         
-        # 延迟加载模型
         self._embedding_model = None
         self._reranker_model = None
 
-        # VectorStore不需要延迟加载，因为它只是加载已保存的索引
         self.vector_store = VectorStore(
-            embedding_dim=384,  # all-MiniLM-L6-v2的维度
+            embedding_dim=EMBEDDING_DIM,
             store_path=vector_store_path
         )
 
-        # 延迟创建retriever
         self._retriever = None
-
-        # 延迟创建LLM客户端
         self._llm_client = None
         
-        # 保存配置
         self.llm_base_url = llm_base_url
         self.llm_model = llm_model
     
@@ -89,21 +84,17 @@ class RAGEngine:
         return self._llm_client
 
     def update_llm_config(self, base_url: str, model: str) -> Dict:
-        """更新LLM配置"""
         try:
-            # 创建新的LLM客户端
             new_client = LLMClient(
                 base_url=base_url,
                 model=model
             )
             
-            # 测试连接
             test_result = new_client.test_connection()
             
             if test_result["success"]:
-                # 关闭旧客户端，替换为新的
                 self.llm_client.close()
-                self.llm_client = new_client
+                self._llm_client = new_client
                 self.llm_base_url = base_url
                 self.llm_model = model
                 
@@ -126,15 +117,12 @@ class RAGEngine:
             }
 
     def test_current_connection(self) -> Dict:
-        """测试当前配置的连接"""
         return self.llm_client.test_connection()
     
     def test_model_connection(self, model_name: str) -> Dict:
-        """测试指定模型的连接"""
         return self.llm_client.test_connection(model_name=model_name)
 
     def get_available_models(self) -> List[str]:
-        """获取可用模型列表"""
         return self.llm_client.get_available_models()
 
     def add_documents(self, file_paths: List[Path]) -> Dict:
@@ -152,7 +140,6 @@ class RAGEngine:
                 logger.info(f"Extracted {len(documents)} chunks from {file_path.name}")
 
                 if documents:
-                    # 确保嵌入模型已初始化
                     if self._embedding_model is None:
                         logger.info("Initializing embedding model...")
                         self.embedding_model
@@ -188,15 +175,12 @@ class RAGEngine:
         }
     
     def rebuild_index(self, file_paths: List[Path]) -> Dict:
-        """重新构建向量索引，删除不存在的文件的索引"""
-        # 重置向量存储
         self.vector_store.reset()
         
         total_chunks = 0
         successful_files = []
         failed_files = []
         
-        # 重新处理所有文件
         for file_path in file_paths:
             if not file_path.exists():
                 logger.warning(f"File not found: {file_path}")
@@ -223,10 +207,8 @@ class RAGEngine:
                 logger.error(f"Error rebuilding {file_path}: {e}")
                 failed_files.append(file_path.name)
         
-        # 保存重建后的索引
         self.vector_store.save()
         
-        # 标记为已加载，避免get_stats时重新加载旧数据
         self.vector_store._loaded = True
         
         return {
@@ -240,9 +222,9 @@ class RAGEngine:
         question: str,
         recall_top_k: int = 20,
         rerank_top_k: int = 5,
-        use_rerank: bool = True
+        use_rerank: bool = True,
+        feedback_history: Optional[List[Dict]] = None
     ):
-        """流式查询，返回生成器"""
         stats = self.vector_store.get_stats()
         has_knowledge_base = stats['total_documents'] > 0
 
@@ -269,10 +251,10 @@ class RAGEngine:
                     'mode': 'rag'
                 }
                 
-                # 流式生成回答
                 for chunk in self.llm_client.generate_with_context_stream(
                     query=question,
-                    context=contexts
+                    context=contexts,
+                    feedback_history=feedback_history
                 ):
                     yield {
                         'type': 'answer_chunk',
@@ -281,7 +263,6 @@ class RAGEngine:
                     }
                 return
 
-        # 对话模式流式回答
         yield {
             'type': 'sources',
             'data': [],
@@ -289,7 +270,7 @@ class RAGEngine:
             'mode': 'chat'
         }
         
-        for chunk in self.llm_client.chat_stream(query=question):
+        for chunk in self.llm_client.chat_stream(query=question, feedback_history=feedback_history):
             yield {
                 'type': 'answer_chunk',
                 'data': chunk,
@@ -303,7 +284,6 @@ class RAGEngine:
         rerank_top_k: int = 5,
         use_rerank: bool = True
     ) -> Dict:
-        """非流式查询，返回完整结果"""
         stats = self.vector_store.get_stats()
         has_knowledge_base = stats['total_documents'] > 0
         

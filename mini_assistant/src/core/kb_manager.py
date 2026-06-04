@@ -1,8 +1,14 @@
 import os
 import json
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 import shutil
+
+from src.config.settings import KNOWLEDGE_BASES_DIR
+
+logger = logging.getLogger(__name__)
+
 
 class KnowledgeBaseConfig:
     def __init__(self, name: str, description: str = "", chunk_size: int = 500, 
@@ -43,10 +49,15 @@ class KnowledgeBaseConfig:
             rerank_top_k=data.get('rerank_top_k', 5)
         )
 
+
 class KBManager:
-    def __init__(self, base_dir: Path):
-        self.base_dir = base_dir
-        self.kb_dir = base_dir / "knowledge_bases"
+    def __init__(self, base_dir: Path = None):
+        if base_dir is None:
+            self.base_dir = KNOWLEDGE_BASES_DIR.parent
+        else:
+            self.base_dir = base_dir
+        
+        self.kb_dir = KNOWLEDGE_BASES_DIR
         self.kb_config_file = self.kb_dir / "kb_configs.json"
         self.kb_dir.mkdir(exist_ok=True)
         
@@ -59,12 +70,11 @@ class KBManager:
                     data = json.load(f)
                     self.kb_configs = {name: KnowledgeBaseConfig.from_dict(cfg) for name, cfg in data.items()}
             except Exception as e:
-                print(f"Error loading KB configs: {e}")
+                logger.error(f"Error loading KB configs: {e}")
                 self.kb_configs = {}
         else:
             self.kb_configs = {}
             
-            # 创建默认知识库
             default_kb = KnowledgeBaseConfig(
                 name="默认知识库",
                 description="系统默认知识库，存放上传的文档",
@@ -80,7 +90,7 @@ class KBManager:
                 data = {name: cfg.to_dict() for name, cfg in self.kb_configs.items()}
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Error saving KB configs: {e}")
+            logger.error(f"Error saving KB configs: {e}")
     
     def create_kb(self, config: KnowledgeBaseConfig) -> bool:
         if config.name in self.kb_configs:
@@ -88,11 +98,9 @@ class KBManager:
         
         self.kb_configs[config.name] = config
         
-        # 创建知识库目录
         kb_path = self.get_kb_path(config.name)
         kb_path.mkdir(parents=True, exist_ok=True)
         
-        # 创建子目录
         (kb_path / "uploads").mkdir(exist_ok=True)
         (kb_path / "vector_store").mkdir(exist_ok=True)
         
@@ -103,11 +111,9 @@ class KBManager:
         if name not in self.kb_configs:
             return False
         
-        # 删除配置
         del self.kb_configs[name]
         self._save_configs()
         
-        # 删除知识库目录
         kb_path = self.get_kb_path(name)
         if kb_path.exists():
             shutil.rmtree(kb_path)
@@ -118,11 +124,9 @@ class KBManager:
         if name not in self.kb_configs:
             return False
         
-        # 更新配置（保留原有数据目录）
         old_path = self.get_kb_path(name)
         self.kb_configs[name] = config
         
-        # 如果名称变了，更新目录名称
         if config.name != name:
             new_path = self.get_kb_path(config.name)
             if old_path.exists() and not new_path.exists():
@@ -140,7 +144,6 @@ class KBManager:
         return list(self.kb_configs.values())
     
     def get_kb_path(self, name: str) -> Path:
-        # 使用名称的安全版本作为目录名
         safe_name = name.replace('/', '_').replace('\\', '_').replace(':', '_')
         return self.kb_dir / safe_name
     
@@ -155,12 +158,10 @@ class KBManager:
         upload_path = kb_path / "uploads"
         vector_store_path = kb_path / "vector_store"
         
-        # 统计文档数量
         doc_count = 0
         if upload_path.exists():
             doc_count = len([f for f in upload_path.iterdir() if f.is_file()])
         
-        # 统计片段数量（通过vector store）
         index_path = vector_store_path / "index.faiss"
         if index_path.exists():
             try:

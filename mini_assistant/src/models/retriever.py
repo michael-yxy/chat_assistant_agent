@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
 import numpy as np
-from embeddings import EmbeddingModel, RerankerModel
-from vector_store import VectorStore
+from src.models.embeddings import EmbeddingModel, RerankerModel
+from src.data.vector_store import VectorStore
 import logging
 
 logger = logging.getLogger(__name__)

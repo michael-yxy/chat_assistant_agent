@@ -1,0 +1,601 @@
+2026-06-04 11:47:23,243 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 11:47:23,244 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 11:47:23,301 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:47:30,770 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:47:30,772 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:47:44,996 - httpx - INFO - HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
+2026-06-04 11:47:45,733 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:48:06,297 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:48:06,301 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 11:48:06,301 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 11:48:06,302 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 11:48:10,730 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 11:48:10,878 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 11:48:10,878 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 11:48:10,878 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 11:48:13,245 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 11:48:13,245 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 11:48:14,480 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=qwen3.6%3A35b-a3b-q8_0%EF%BC%8C%E4%BD%A0%E6%98%AF%E9%87%8F%E5%8C%96%E7%89%88%E6%A8%A1%E5%9E%8B%E5%90%97%EF%BC%9F&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 11:48:15,809 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=OkRNeoOhOR42fOECN1PeOI_NPxF-l75ALCMKV_8HT1lMu1l-61AlCVJWcBu05qGD9EbyGZPI3M9U6U9bxpzPwSB_NvKsnxP_10EuhWIMQri "HTTP/1.1 302 Found"
+2026-06-04 11:48:16,600 - httpx - INFO - HTTP Request: GET https://yweng18.blog.csdn.net/article/details/160348373 "HTTP/1.1 200 OK"
+2026-06-04 11:48:16,745 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=35MUzNBypCyfFmgbzwrDAVrPucrL1yLq7V87TVWrKiZ3gBIJRwmssxC3CSCfq8s96lNvJ50gJnkiG2GHiDGdTa "HTTP/1.1 302 Found"
+2026-06-04 11:48:16,814 - httpx - INFO - HTTP Request: GET https://zhuanlan.zhihu.com/p/2029567873601795010 "HTTP/1.1 403 Forbidden"
+2026-06-04 11:48:16,844 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=LnkCg0JHFqX9NIY9bgQ42RldLNn5e7czAGczjv8UD3ksvAhsjZASsflupvAuGzGZ4cPeii5so0u60L85TAm_-OTNJUWhiBHuovKzzIDIn-C "HTTP/1.1 302 Found"
+2026-06-04 11:48:17,125 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1865118443637243384&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 11:48:17,447 - httpx - INFO - HTTP Request: GET https://yweng18.blog.csdn.net/article/details/160348373 "HTTP/1.1 200 OK"
+2026-06-04 11:48:17,555 - httpx - INFO - HTTP Request: GET https://zhuanlan.zhihu.com/p/2029567873601795010 "HTTP/1.1 403 Forbidden"
+2026-06-04 11:48:17,556 - src.services.search - ERROR - 获取网页内容失败 https://zhuanlan.zhihu.com/p/2029567873601795010: Client error '403 Forbidden' for url 'https://zhuanlan.zhihu.com/p/2029567873601795010'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403
+2026-06-04 11:48:17,647 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1865118443637243384&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 11:48:17,650 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 11:48:25,678 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 11:48:25,680 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 11:49:59,157 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 11:56:08,648 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 11:56:08,649 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 11:56:08,706 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:56:21,386 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 11:56:21,389 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 11:56:21,389 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 11:56:21,390 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 11:56:25,473 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 11:56:25,558 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 11:56:25,558 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 11:56:25,559 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 11:56:28,055 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 11:56:28,055 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 11:56:29,087 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%90%90%E9%B2%81%E7%95%AA%E6%9C%AA%E6%9D%A5%E5%A4%A9%E6%B0%94%E5%A6%82%E4%BD%95&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 11:56:30,350 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=cSD76QB1bC658cTZWXMYJSr9I8aoqjUMbEPbCwDBKvF9_AHx8Ry_ItUs5H_dLAcnMr_ut9LgwcSNFvDWRqVuDFNT76qBPe_ieoZzoC0DB2u "HTTP/1.1 302 Found"
+2026-06-04 11:56:30,437 - httpx - INFO - HTTP Request: GET http://m.src.weather.com.cn/mweather15d/101130501.shtml "HTTP/1.1 200 OK"
+2026-06-04 11:56:30,466 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=XJMPkQeiC3MgNDL7XDMpve9wl5ANbDoUptEQaPMeeBgm3szJbZXjDiPGOPAyAV7H "HTTP/1.1 302 Found"
+2026-06-04 11:56:30,658 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/tulufan/30/ "HTTP/1.1 200 OK"
+2026-06-04 11:56:30,689 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=cSD76QB1bC658cTZWXMYJZUvDzBOnLCeme5aqA3EYXSHb5BHLrawJE9-NlfAWKdEWVdrpBbNF1lU_8inVsGCa6DJajtU0V10ifKOi1NZAhy "HTTP/1.1 302 Found"
+2026-06-04 11:56:30,993 - httpx - INFO - HTTP Request: GET https://www.qweather.com/weather30d/turpan-101130501.html "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,025 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=wQQZEjPwrDfM2CLLUbWUOof6xpCjAa6NuC1qAdMeRBhOvAwsxx9YpHxgWIRgW0HoXN1yJTtuqxf-kFrxFnrXqa "HTTP/1.1 302 Found"
+2026-06-04 11:56:31,182 - httpx - INFO - HTTP Request: GET http://waptianqi.2345.com/mip/tulufan-51573.htm "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,309 - httpx - INFO - HTTP Request: GET http://m.src.weather.com.cn/mweather15d/101130501.shtml "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,340 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/tulufan/30/ "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,393 - httpx - INFO - HTTP Request: GET https://www.qweather.com/weather30d/turpan-101130501.html "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,466 - httpx - INFO - HTTP Request: GET http://waptianqi.2345.com/mip/tulufan-51573.htm "HTTP/1.1 200 OK"
+2026-06-04 11:56:31,511 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 11:56:52,311 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 11:56:52,312 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 11:59:06,339 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:00:16,403 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:00:16,404 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:00:16,495 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:00:34,779 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:00:34,780 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:00:34,794 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:00:43,315 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:00:43,317 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 12:00:43,318 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 12:00:43,318 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 12:00:47,499 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 12:00:47,588 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 12:00:47,588 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 12:00:47,588 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 12:00:49,690 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 12:00:49,690 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 12:00:50,718 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%91%BC%E5%92%8C%E6%B5%A9%E7%89%B9%E6%9C%AA%E6%9D%A51%E5%91%A8%E5%A4%A9%E6%B0%94&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 12:00:51,619 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=1Xh7bOu89e2Y1xJk-oekSGr6SaVHxClFcohs1XTzvn39o6O6hwhkQdMDYWLprpCosnbEKxIIxBmyrXFuLaJ72MDrbVviF_AdXaKNrmSfdTi "HTTP/1.1 302 Found"
+2026-06-04 12:00:51,766 - httpx - INFO - HTTP Request: GET http://m.src.weather.com.cn/mweather15d/101080101.shtml "HTTP/1.1 200 OK"
+2026-06-04 12:00:51,795 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=1Xh7bOu89e2Y1xJk-oekSAu7tgaUu1oUQvDBnmHCLhVg6fcxMWO1pcN_R0J1eUSdwBnnj42jZ18yp_wIWricKq "HTTP/1.1 302 Found"
+2026-06-04 12:00:51,925 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/30/ "HTTP/1.1 200 OK"
+2026-06-04 12:00:51,959 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=1Xh7bOu89e2Y1xJk-oekSAu7tgaUu1oUQvDBnmHCLhVg6fcxMWO1pcN_R0J1eUSdZ5fk0K7e99Z2BmP1cXlswK "HTTP/1.1 302 Found"
+2026-06-04 12:00:52,056 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/40/ "HTTP/1.1 200 OK"
+2026-06-04 12:00:52,094 - httpx - INFO - HTTP Request: GET http://m.src.weather.com.cn/mweather15d/101080101.shtml "HTTP/1.1 200 OK"
+2026-06-04 12:00:52,123 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/30/ "HTTP/1.1 200 OK"
+2026-06-04 12:00:52,153 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/40/ "HTTP/1.1 200 OK"
+2026-06-04 12:00:52,175 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:01:01,362 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:01:01,362 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:01:16,307 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:01:22,219 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:01:27,802 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:01:33,065 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:01:35,388 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:01:35,918 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%91%BC%E5%92%8C%E6%B5%A9%E7%89%B9%E6%9C%AA%E6%9D%A51%E5%91%A8%E5%A4%A9%E6%B0%94&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 12:01:36,632 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=NfxlKXTs6dRseJdI-yZ4EQhTTbGIT7f8J2fdk4p0ihssVPdyzFhi1WwNH0MnpWj4Mm_h_7uowhofc0KF-gFhVYUOe4Dpi7KRJGJu5YY6fNq "HTTP/1.1 302 Found"
+2026-06-04 12:01:46,698 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=NfxlKXTs6dRseJdI-yZ4EXToynFR3mJBUPTIwuvOPe94r5UlBS3kq_BoqAvKT01s2cDLvEFTK2eGRIcJ0wxFVK "HTTP/1.1 302 Found"
+2026-06-04 12:01:46,816 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/30/ "HTTP/1.1 200 OK"
+2026-06-04 12:01:46,849 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=NfxlKXTs6dRseJdI-yZ4EXToynFR3mJBUPTIwuvOPe94r5UlBS3kq_BoqAvKT01sJEiCMpZHDSFbar_0Tf0Ueq "HTTP/1.1 302 Found"
+2026-06-04 12:01:46,860 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/40/ "HTTP/1.1 200 OK"
+2026-06-04 12:01:46,891 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=NfxlKXTs6dRseJdI-yZ4EQhTTbGIT7f8J2fdk4p0ihssVPdyzFhi1WwNH0MnpWj4Mm_h_7uowhofc0KF-gFhVYUOe4Dpi7KRJGJu5YY6fNq "HTTP/1.1 302 Found"
+2026-06-04 12:01:57,962 - httpx - INFO - HTTP Request: GET http://m.src.weather.com.cn/mweather15d/101080101.shtml "HTTP/1.1 200 OK"
+2026-06-04 12:01:58,006 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/30/ "HTTP/1.1 200 OK"
+2026-06-04 12:01:58,038 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/huhehaote/40/ "HTTP/1.1 200 OK"
+2026-06-04 12:01:58,055 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:02:07,195 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:02:07,196 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:02:14,089 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:02:14,090 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:02:14,099 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:02:17,246 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:02:20,124 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:02:34,144 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:02:34,145 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 12:02:34,145 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 12:02:34,146 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 12:02:38,321 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 12:02:38,433 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 12:02:38,433 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 12:02:38,433 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 12:02:40,709 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 12:02:40,709 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 12:02:41,220 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%8D%83%E5%AD%97%E6%96%87%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%8C%E8%BE%93%E5%87%BA%E5%AE%83%E7%9A%84%E5%86%85%E5%AE%B9&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 12:02:42,168 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=eXSxhhPGmKgUXIDID_UhMf9sIRgt2SlddxHtZV3kiJP10-3YWHarJi2TTlcIkFdQ6EB9RmzSINN-C889xkLSYP-c868Qpu2y4byy14yjHfNs7MDeJ52BpSSsp7ftO0fJgP5uvUp9mpenwC1wToJgUK "HTTP/1.1 302 Found"
+2026-06-04 12:02:42,456 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811494911557156363&fr=search "HTTP/1.1 200 OK"
+2026-06-04 12:02:42,524 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811494911557156363&fr=search "HTTP/1.1 200 OK"
+2026-06-04 12:02:42,527 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:02:46,658 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:02:46,658 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:02:53,441 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:03:05,312 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:03:05,313 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:03:05,324 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:03:09,947 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:03:09,948 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:03:09,955 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:03:11,947 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:06:39,740 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:06:39,741 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:06:39,814 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:06:52,097 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:06:52,099 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 12:06:52,100 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 12:06:52,100 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 12:06:57,282 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 12:06:57,379 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 12:06:57,379 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 12:06:57,379 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 12:06:59,619 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 12:06:59,619 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 12:07:00,400 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%90%90%E9%B2%81%E7%95%AA%E5%92%8C%E4%B9%8C%E9%B2%81%E6%9C%A8%E9%BD%90%EF%BC%8C%E5%93%AA%E4%B8%AA%E5%9F%8E%E5%B8%82%E6%9B%B4%E7%83%AD%EF%BC%9F&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 12:07:01,500 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=aQT6b0aulhn7Ws8V24gFQGV6uNCFkImzSO5_MMg9zZCNzGU8JZltEh3dpOyNzMMsUHsEjl6Gl_pMluadzkUjpxwKbkJT_7GAEHqvByargUu121NmoaZokBb6JWnmrzocmNs5kQgjaYYf_NQ_7g_fd_ "HTTP/1.1 302 Found"
+2026-06-04 12:07:01,648 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1737021962697904202&fr=search "HTTP/1.1 200 OK"
+2026-06-04 12:07:01,681 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=6xaDhYvjXJDhrEyPMOvY1VMu_Vv_YBcxFVISOTr_ZLb4K-Q79OELezRC0fhd-NgJa86X8a8RoioeelPZWfz7uKCdznRNs7OJJmCBV2-87De "HTTP/1.1 302 Found"
+2026-06-04 12:07:01,963 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862155649590065989&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:07:02,008 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=6xaDhYvjXJDhrEyPMOvY1VMu_Vv_YBcxFVISOTr_ZLb2HOYvYcaixArRvvscyxcc90GaLgw70zjQN2FH-ixYZ4ffkZor2QpxKAispcvDcP7 "HTTP/1.1 302 Found"
+2026-06-04 12:07:02,189 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1861867827671986036&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:07:02,241 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1737021962697904202&fr=search "HTTP/1.1 200 OK"
+2026-06-04 12:07:02,327 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862155649590065989&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:07:02,438 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1861867827671986036&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:07:02,446 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:07:09,555 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:07:09,555 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:07:26,755 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:08:03,593 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:08:03,595 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:08:03,613 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:08:05,943 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:08:06,767 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:08:14,666 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:08:14,669 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:08:15,477 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:08:15,477 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:08:39,012 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:09:05,034 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:09:50,787 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:09:50,968 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%93%AA%E4%B8%AA%E6%9B%B4%E5%86%B7%EF%BC%9F&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 12:09:52,158 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=oAcHPLgykLa4y6quiuz8ZP5wrsYoeUtVr6YQOaiXFWT9tFp6ixEh5TFw4-2Y9REtz0lbwmGVn9LnvU2KN1GrS-8LoyR7qqdzjOq1HYhtbaC "HTTP/1.1 302 Found"
+2026-06-04 12:09:52,464 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862042491952194090&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:09:52,497 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=LNGZ-603YFpnETPraHxwBclW8gubGUdtok1O52OZOiZ-nN3QTm31LObguSJ75eF0MWgRZRrv2lo0ooGbDAdRgrG3cBgfJ5JNAbypnuasri_ "HTTP/1.1 302 Found"
+2026-06-04 12:09:52,833 - httpx - INFO - HTTP Request: GET https://haokan.baidu.com/v?pd=wisenatural&vid=10594072617711056426 "HTTP/1.1 200 OK"
+2026-06-04 12:09:52,949 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862042491952194090&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 12:09:53,037 - httpx - INFO - HTTP Request: GET https://haokan.baidu.com/v?pd=wisenatural&vid=10594072617711056426 "HTTP/1.1 200 OK"
+2026-06-04 12:09:53,040 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 12:09:55,700 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 12:09:55,700 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 12:10:08,656 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 12:11:10,762 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 12:13:27,610 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 12:13:27,612 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 12:15:24,957 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 12:15:24,959 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 12:15:24,990 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 12:15:24,992 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 12:15:25,003 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:07:41,248 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:07:46,482 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:36,333 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 14:12:36,334 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 14:12:36,375 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:42,645 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:51,715 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:51,904 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,001 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,232 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,331 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,598 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,697 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:52,966 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:53,067 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:53,350 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:53,452 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:53,715 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:53,813 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:54,091 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:54,185 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:54,650 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:54,745 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,013 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,223 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,318 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,590 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,684 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:55,958 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:56,058 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:56,331 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:56,433 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:56,714 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:56,807 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:57,078 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:57,282 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:57,375 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:57,645 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:57,742 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:58,025 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:58,118 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:58,400 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:58,490 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:58,807 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:59,010 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:59,217 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:12:59,413 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:13:05,901 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:13:08,550 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:13:08,714 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%90%90%E9%B2%81%E7%95%AA%E5%92%8C%E4%B9%8C%E9%B2%81%E6%9C%A8%E9%BD%90%E5%93%AA%E4%B8%AA%E5%9F%8E%E5%B8%82%E6%9B%B4%E7%83%AD%EF%BC%9F&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 14:13:09,999 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=lvfB5HKeihu2f0PyccHpuoWNJ5jssQgsEGxP151tlTt4TSHlJzG_XuM7ML4FA2oyHW8MfFgnUjyC94ckVLJyU5g-RVTr3IWOH-ZXb3UBB3G1HDWA2_amobAHtazEP5hWAVZ9je3TvAE18_RYMKBfWa "HTTP/1.1 302 Found"
+2026-06-04 14:13:10,155 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1737021962697904202&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:13:10,188 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=2WdlU5s8nltVyCcTgG8gwOV7RjhzRrCKho0RJvqLa-lHgR38d1cdJfq94vyZAvJRkbs7_dD5z47vDkcvx-rSW6WywybXGYK3C0xuWumJrPG "HTTP/1.1 302 Found"
+2026-06-04 14:13:10,496 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862155649590065989&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:13:10,529 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=lhPi1yRNRtVTDfp3lr1sIiavDVMksrdZS-UvlsJgJonrbO04wop0aGAFiTfLqnag04LoSGELUZksDs1wEX36j_ "HTTP/1.1 302 Found"
+2026-06-04 14:13:11,699 - httpx - INFO - HTTP Request: GET http://www.xachuanpu.com.cn/xinpu/32369.html "HTTP/1.1 404 Not Found"
+2026-06-04 14:13:11,752 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1737021962697904202&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:13:11,838 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1862155649590065989&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:13:11,928 - httpx - INFO - HTTP Request: GET http://www.xachuanpu.com.cn/xinpu/32369.html "HTTP/1.1 404 Not Found"
+2026-06-04 14:13:11,928 - src.services.search - ERROR - 获取网页内容失败 http://www.xachuanpu.com.cn/xinpu/32369.html: Client error '404 Not Found' for url 'http://www.xachuanpu.com.cn/xinpu/32369.html'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404
+2026-06-04 14:13:11,928 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:13:26,209 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:13:26,217 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:13:41,049 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:14:00,124 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:14:00,425 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%AE%83%E4%BB%AC%E7%9A%84%E6%B8%A9%E5%BA%A6%E9%83%BD%E5%9C%A8%E4%BB%80%E4%B9%88%E8%8C%83%E5%9B%B4%E5%8C%BA%E9%97%B4&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 14:14:01,477 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=pNscpWRha3f0ElTIbFq-lwPm08DFhTbGm0ZN2O1ICdI_Dl6MgO-xDgonbYGTlwHg7JSK3lhMjwkX3GZt6LseE8arK-ADTmom7EdU-qQLU2e-n5JEVgYNjEAqFYn3HpKD8DnQ3ds1Hs0AFypOdWqvoq "HTTP/1.1 302 Found"
+2026-06-04 14:14:01,633 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811862357005391084&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:14:01,669 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=pNscpWRha3f0ElTIbFq-lwPm08DFhTbGm0ZN2O1ICdI_Dl6MgO-xDgonbYGTlwHg7JSK3lhMjwkX3GZt6LseE8arK-ADTmom7EdU-qQLU2eo2g58xagkxryxsEN-EZEQICD7ca7V6AIdPNa9entGDa "HTTP/1.1 302 Found"
+2026-06-04 14:14:01,737 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1829626520321629796&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:14:01,877 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811862357005391084&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:14:01,936 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1829626520321629796&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:14:01,938 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:14:04,345 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:14:04,345 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:14:07,912 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:18:00,897 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 14:18:00,898 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 14:18:00,998 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:18:16,049 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:18:16,052 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 14:18:16,052 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 14:18:16,053 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 14:18:20,273 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 14:18:20,369 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 14:18:20,369 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 14:18:20,369 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 14:18:22,717 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 14:18:22,718 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 14:18:23,616 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%90%90%E9%B2%81%E7%95%AA%E5%92%8C%E9%87%8D%E5%BA%86%EF%BC%8C%E5%93%AA%E4%B8%AA%E5%9F%8E%E5%B8%82%E6%9B%B4%E7%83%AD%EF%BC%9F&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 14:18:24,783 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=2a9K2hC1MK-n7ltE3C8z2a5KpScZrgL3iEhrzIjQhS0aF0VwjNSUmR0dKXiZ49JoHzZPZMxeVMbLN7IspiaKDJ33z3Nt1w8fXwDZBjRGQrm "HTTP/1.1 302 Found"
+2026-06-04 14:18:25,091 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1861779795807468190&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:18:25,127 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=2a9K2hC1MK-n7ltE3C8z2a5KpScZrgL3iEhrzIjQhS_N1R5Z77cyD0vQcKuZlRtVWuTHHlRNzb2l6Y2ukc8tPJ93EvFtA7iJnyxox1UChGi "HTTP/1.1 302 Found"
+2026-06-04 14:18:25,324 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1866942097340000112&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:18:25,428 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1861779795807468190&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:18:25,595 - httpx - INFO - HTTP Request: GET https://baijiahao.baidu.com/s?id=1866942097340000112&wfr=spider&for=pc "HTTP/1.1 200 OK"
+2026-06-04 14:18:25,602 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 14:18:25,603 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:18:32,626 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:18:32,626 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:18:52,466 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:19:06,320 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:13,129 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:17,406 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:18,087 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E5%AE%83%E4%BB%AC%E7%9A%84%E6%B8%A9%E5%BA%A6%E9%83%BD%E5%9C%A8%E4%BB%80%E4%B9%88%E8%8C%83%E5%9B%B4%E5%8C%BA%E9%97%B4&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 14:19:18,576 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=MtWmzh1DwqVeN7n2NYmxmfj7ajV5l_FmFm_0G9pdnc_JIr7mv7266585oFJEGO5IDsZJJXBqYqKAmshL4k4GYjTBbkf6b_Ab9_BNqEBo0x6rDRSFUVZlIPywc5MpRisoFPW4YVJiYzSZcpaBMGbmXK "HTTP/1.1 302 Found"
+2026-06-04 14:19:18,721 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811862357005391084&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:19:18,750 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=MtWmzh1DwqVeN7n2NYmxmfj7ajV5l_FmFm_0G9pdnc_JIr7mv7266585oFJEGO5IDsZJJXBqYqKAmshL4k4GYjTBbkf6b_Ab9_BNqEBo0x5q5fmcEk4_LleI_2IVTE3K5PnMUrBsGWBBSGUFUAkZeq "HTTP/1.1 302 Found"
+2026-06-04 14:19:18,801 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1829626520321629796&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:19:18,833 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=SGoJl92L15UduG63ZdNH2VUwHfvItmRamCNG_dNh21FWmxLfF2c-V5qcGifYHAdKTy75Kw597WLF7E-K_aYdit1_fO1pxk-OTDb-T4lON1erPao2UaHGVNJbzJZR3FLOzz2qpV9XR51yuZ2MeVUcvGbOydMMfbKh2NuikLdKwRa0ZM_EfUeNFRzaujo2JhUFHCEevk4Inyyq2MWJ_z7ZVK "HTTP/1.1 302 Found"
+2026-06-04 14:19:18,970 - httpx - INFO - HTTP Request: GET https://aistudy.baidu.com/site/wjzsorv8/8cd47d9a-7797-42f3-9306-b902ded71161?botSourceType=124&eduFrom=196&examQuestionId=2wMEZB7ko_zm4nkrydnbyg "HTTP/1.1 200 OK"
+2026-06-04 14:19:19,071 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1811862357005391084&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:19:19,123 - httpx - INFO - HTTP Request: GET https://easylearn.baidu.com/edu-page/tiangong/questiondetail?id=1829626520321629796&fr=search "HTTP/1.1 200 OK"
+2026-06-04 14:19:19,170 - httpx - INFO - HTTP Request: GET https://aistudy.baidu.com/site/wjzsorv8/8cd47d9a-7797-42f3-9306-b902ded71161?botSourceType=124&eduFrom=196&examQuestionId=2wMEZB7ko_zm4nkrydnbyg "HTTP/1.1 200 OK"
+2026-06-04 14:19:19,172 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 14:19:19,172 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:19:23,493 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:19:23,493 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:19:29,513 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:19:39,878 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:40,751 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:47,890 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:47,896 - src.models.llm - INFO - Adding 2 history messages
+2026-06-04 14:19:47,897 - src.models.llm - INFO - Total messages in request: 4
+2026-06-04 14:19:47,897 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:19:49,152 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:19:49,153 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:19:55,747 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:19:56,704 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:57,572 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:19:58,263 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:20:08,556 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:20:08,561 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 14:20:08,562 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:20:09,438 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:20:09,438 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:20:44,132 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:20:54,199 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:20:54,202 - src.models.llm - INFO - Adding 2 history messages
+2026-06-04 14:20:54,203 - src.models.llm - INFO - Total messages in request: 4
+2026-06-04 14:20:54,203 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:20:56,815 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:20:56,816 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:21:12,935 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:21:18,483 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:21:18,487 - src.models.llm - INFO - Adding 4 history messages
+2026-06-04 14:21:18,487 - src.models.llm - INFO - Total messages in request: 6
+2026-06-04 14:21:18,487 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:21:20,897 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:21:20,897 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:21:49,218 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:24:33,360 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 14:24:33,363 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 14:24:33,536 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:25:23,380 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:25:23,384 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 14:25:23,385 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:25:24,204 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:25:24,204 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:26:06,459 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:26:08,557 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:26:08,561 - src.models.llm - INFO - Adding 2 history messages
+2026-06-04 14:26:08,561 - src.models.llm - INFO - Total messages in request: 4
+2026-06-04 14:26:08,561 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:26:11,493 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:26:11,493 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:26:58,034 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:27:52,119 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:27:52,124 - src.models.llm - INFO - Adding 4 history messages
+2026-06-04 14:27:52,125 - src.models.llm - INFO - Total messages in request: 6
+2026-06-04 14:27:52,125 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:27:56,869 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:27:56,869 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:28:52,800 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 14:29:25,349 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 14:29:25,361 - src.models.llm - INFO - Adding 6 history messages
+2026-06-04 14:29:25,362 - src.models.llm - INFO - Total messages in request: 8
+2026-06-04 14:29:25,362 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 14:29:33,239 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 14:29:33,240 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 14:30:23,888 - src.models.llm - INFO - Received done, stream completed
+2026-06-04 15:22:54,289 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:22:54,290 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:22:54,335 - src.models.llm - WARNING - Failed to get model list: [Errno 61] Connection refused
+2026-06-04 15:23:01,342 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:23:02,529 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:23:21,871 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:23:21,874 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 15:23:21,874 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 15:23:34,036 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 15:23:34,045 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 15:24:25,755 - src.models.llm - INFO - Received done, stream completed. History has 2 messages
+2026-06-04 15:26:09,447 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:15,308 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 15:26:15,310 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 15:26:15,323 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:15,423 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:20,516 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:20,680 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:29,390 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 15:26:29,391 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 15:26:29,410 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:29,591 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:30,658 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:30,763 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:32,437 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:32,540 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,133 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,262 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,364 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,554 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,747 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:34,929 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,112 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,295 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,392 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,487 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,580 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,678 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,774 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:35,969 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:36,069 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:36,184 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:36,282 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:36,377 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:36,470 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:26:41,718 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:01,433 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:31:01,435 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:31:01,493 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:04,763 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:06,011 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:12,559 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:17,073 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:17,175 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:22,784 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:22,879 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:26,971 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:27,075 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:32,622 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:32,724 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:34,164 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:34,266 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:35,358 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:31:35,462 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:34:39,080 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:34:39,081 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:34:39,108 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:34:41,914 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:34:43,377 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:34:46,959 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:34:47,056 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:23,329 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 15:37:23,330 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 15:37:23,337 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:37:23,338 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:37:23,344 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:27,154 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:31,293 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:36,301 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:55,389 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:37:55,397 - src.core.rag_engine - INFO - Initializing embedding model...
+2026-06-04 15:37:55,398 - src.models.embeddings - INFO - Loading embedding model: all-MiniLM-L6-v2
+2026-06-04 15:37:55,398 - sentence_transformers.SentenceTransformer - INFO - Load pretrained SentenceTransformer: all-MiniLM-L6-v2
+2026-06-04 15:37:59,919 - sentence_transformers.SentenceTransformer - INFO - Use pytorch device_name: mps
+2026-06-04 15:38:00,001 - src.models.embeddings - INFO - Embedding model loaded successfully
+2026-06-04 15:38:00,001 - src.core.rag_engine - INFO - Initializing reranker model...
+2026-06-04 15:38:00,001 - src.models.embeddings - INFO - Loading reranker model: cross-encoder/ms-marco-MiniLM-L-6-v2
+2026-06-04 15:38:00,233 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:38:01,783 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:38:02,480 - sentence_transformers.cross_encoder.CrossEncoder - INFO - Use pytorch device: mps
+2026-06-04 15:38:02,480 - src.models.embeddings - INFO - Reranker model loaded successfully
+2026-06-04 15:38:13,096 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:38:13,676 - httpx - INFO - HTTP Request: GET https://www.baidu.com/s?wd=%E8%A5%BF%E5%AE%89%E5%A4%A9%E6%B0%94%E6%80%8E%E4%B9%88%E6%A0%B7%E4%BB%8A%E5%A4%A9&pn=0&rn=5&ie=utf-8 "HTTP/1.1 200 OK"
+2026-06-04 15:38:15,007 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=u-0v53vo7klK0hMJx0PcK8121Yy8Bsji1EtQsBXG4Av1nZAyDXJ9RJlsJgnDpYJKsMIipiz5ImSwOe7lkQYLW_ "HTTP/1.1 302 Found"
+2026-06-04 15:38:15,031 - httpx - INFO - HTTP Request: GET http://www.weather.com.cn/weather2d/101110101.shtml "HTTP/1.1 301 Moved Permanently"
+2026-06-04 15:38:15,241 - httpx - INFO - HTTP Request: GET https://www.weather.com.cn/weather2d/101110101.shtml "HTTP/1.1 200 OK"
+2026-06-04 15:38:15,273 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=XCf7vuRxcx_Fxx4S5TIbWp1ww6baQ2hZ1eaDFX5AIdzoYeJnpEWlIqoVqtpikryS "HTTP/1.1 302 Found"
+2026-06-04 15:38:15,620 - httpx - INFO - HTTP Request: GET https://www.weaoo.com/xian-181387.html "HTTP/1.1 200 OK"
+2026-06-04 15:38:15,653 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=u-0v53vo7klK0hMJx0PcKrV_pK3DNx-s7JIUEKag8AmtpT9HShiKztdcX4ADVkr2 "HTTP/1.1 302 Found"
+2026-06-04 15:38:15,774 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/xian/15/ "HTTP/1.1 200 OK"
+2026-06-04 15:38:15,808 - httpx - INFO - HTTP Request: GET http://www.baidu.com/link?url=JGR645XqHSRGMAA0UecXUW1-styqahJ220dmmm6-eiAR4VavCEs_SV_srsdAxX5tWAgbBdLfuj23LoLC9qskJq "HTTP/1.1 302 Found"
+2026-06-04 15:38:16,003 - httpx - INFO - HTTP Request: GET http://waptianqi.2345.com/xian-71539.htm "HTTP/1.1 200 OK"
+2026-06-04 15:38:16,042 - httpx - INFO - HTTP Request: GET https://www.weather.com.cn/weather2d/101110101.shtml "HTTP/1.1 200 OK"
+2026-06-04 15:38:16,136 - httpx - INFO - HTTP Request: GET https://www.weaoo.com/xian-181387.html "HTTP/1.1 200 OK"
+2026-06-04 15:38:16,146 - httpx - INFO - HTTP Request: GET https://tianqi.eastday.com/xian/15/ "HTTP/1.1 200 OK"
+2026-06-04 15:38:16,237 - httpx - INFO - HTTP Request: GET http://waptianqi.2345.com/xian-71539.htm "HTTP/1.1 200 OK"
+2026-06-04 15:38:16,262 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 15:38:16,262 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 15:38:35,330 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 15:38:35,334 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 15:38:51,012 - src.models.llm - INFO - Received done, stream completed. History has 2 messages
+2026-06-04 15:38:52,444 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:38:54,273 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:41:51,849 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:41:51,851 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:41:51,958 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:41:57,988 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:08,500 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:18,709 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:18,893 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:48,735 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:48,924 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:52,990 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:42:53,095 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:59:04,511 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 15:59:04,512 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 15:59:04,561 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 15:59:58,923 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:00:04,874 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:00:07,125 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:00:14,728 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:00:14,730 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 16:00:14,730 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:00:25,917 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:00:25,918 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:00:56,384 - src.models.llm - INFO - Received done, stream completed. History has 2 messages
+2026-06-04 16:03:40,446 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:03:40,628 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:03:49,450 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:03:49,456 - src.models.llm - INFO - Adding 2 history messages
+2026-06-04 16:03:49,456 - src.models.llm - INFO - Total messages in request: 4
+2026-06-04 16:03:49,456 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:03:53,775 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:03:53,775 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:04:42,265 - src.models.llm - INFO - Received done, stream completed. History has 4 messages
+2026-06-04 16:05:00,455 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:05:00,566 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:05:09,817 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:05:09,823 - src.models.llm - INFO - Adding 4 history messages
+2026-06-04 16:05:09,824 - src.models.llm - INFO - Total messages in request: 6
+2026-06-04 16:05:09,824 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:05:18,448 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:05:18,448 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:06:14,730 - src.models.llm - INFO - Received done, stream completed. History has 6 messages
+2026-06-04 16:07:52,515 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:07:52,516 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:07:52,611 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:09:54,207 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:09:55,890 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:09:56,705 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:13:53,960 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:13:53,961 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:13:54,011 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:14:38,817 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:14:38,818 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:14:38,846 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:14:59,033 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:14:59,036 - src.models.llm - INFO - Total messages in request: 2
+2026-06-04 16:14:59,036 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:15:09,889 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:15:09,890 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:15:54,414 - src.models.llm - INFO - Received done, stream completed. History has 2 messages
+2026-06-04 16:16:29,995 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:16:30,180 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:16:43,396 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:16:43,402 - src.models.llm - INFO - Added feedback prompt with 1 feedback items
+2026-06-04 16:16:43,402 - src.models.llm - INFO - Adding 2 history messages
+2026-06-04 16:16:43,402 - src.models.llm - INFO - Total messages in request: 4
+2026-06-04 16:16:43,402 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:16:49,119 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:16:49,120 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:17:36,979 - src.models.llm - INFO - Received done, stream completed. History has 4 messages
+2026-06-04 16:17:39,432 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:17:39,540 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:17:48,128 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:17:48,134 - src.models.llm - INFO - Added feedback prompt with 2 feedback items
+2026-06-04 16:17:48,134 - src.models.llm - INFO - Adding 4 history messages
+2026-06-04 16:17:48,134 - src.models.llm - INFO - Total messages in request: 6
+2026-06-04 16:17:48,134 - src.models.llm - INFO - Starting stream request to http://localhost:11434/api/chat
+2026-06-04 16:17:58,049 - httpx - INFO - HTTP Request: POST http://localhost:11434/api/chat "HTTP/1.1 200 OK"
+2026-06-04 16:17:58,049 - src.models.llm - INFO - Connected to streaming API, waiting for chunks...
+2026-06-04 16:18:47,520 - src.models.llm - INFO - Received done, stream completed. History has 6 messages
+2026-06-04 16:18:55,373 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:18:55,552 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:43,743 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 16:19:43,745 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 16:19:43,764 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:43,923 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:45,638 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:45,746 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:49,381 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:19:49,382 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:19:49,394 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:19:52,471 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:22:48,381 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:22:48,383 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:22:48,445 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:22:53,082 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:26:58,230 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:27:05,870 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:27:44,341 - src.data.document_processor - INFO - OCR support enabled (pytesseract and PIL available)
+2026-06-04 16:27:44,342 - src.models.embeddings - INFO - sentence-transformers imported successfully
+2026-06-04 16:27:44,351 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:27:44,352 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:27:44,358 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:27:50,333 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:27:55,038 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:28:50,893 - src.data.vector_store - INFO - Vector store loaded from /Users/george/Documents/开发/develop/mini_assistant/knowledge_bases/默认知识库/vector_store
+2026-06-04 16:28:50,894 - src.core.rag_engine - INFO - Initializing LLM client...
+2026-06-04 16:28:50,902 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"
+2026-06-04 16:29:32,727 - httpx - INFO - HTTP Request: GET http://localhost:11434/api/tags "HTTP/1.1 200 OK"

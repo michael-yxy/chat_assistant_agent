@@ -3,14 +3,11 @@ from typing import List, Union
 import torch
 import logging
 import os
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# 设置国内镜像源
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 
-# 尝试导入sentence-transformers
 try:
     from sentence_transformers import SentenceTransformer, CrossEncoder
     SENTENCE_TRANSFORMERS_AVAILABLE = True

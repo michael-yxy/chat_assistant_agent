@@ -40,7 +40,6 @@ class VectorStore:
         self.metadata.extend([doc['metadata'] for doc in documents])
     
     def reset(self):
-        """重置向量存储"""
         self.index = None
         self.documents = []
         self.metadata = []
@@ -125,7 +124,6 @@ class VectorStore:
         }
     
     def get_all_documents(self) -> List[str]:
-        """获取所有唯一的文档名称列表"""
         self._ensure_loaded()
         unique_sources = set()
         for meta in self.metadata:
@@ -134,7 +132,6 @@ class VectorStore:
         return sorted(list(unique_sources))
     
     def get_chunks_by_document(self, document_name: str) -> List[Dict]:
-        """获取指定文档的所有片段"""
         self._ensure_loaded()
         chunks = []
         for i, meta in enumerate(self.metadata):
@@ -147,7 +144,6 @@ class VectorStore:
         return chunks
     
     def get_all_chunks(self) -> List[Dict]:
-        """获取所有片段"""
         self._ensure_loaded()
         chunks = []
         for i, doc in enumerate(self.documents):
@@ -157,3 +153,12 @@ class VectorStore:
                 'index': i
             })
         return chunks
+    
+    def __enter__(self):
+        self._ensure_loaded()
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self.save()
+        return False
