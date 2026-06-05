@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  kkfileview:
+    image: keking/kkfileview:4.1.0
+    container_name: kkfileview
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./data:/data
+      - ./logs:/opt/kkfileview/logs
+      - ./knowledge_bases:/opt/kkfileview/knowledge_bases
+      - ./cache:/opt/kkFileView-4.1.0/file
+    environment:
+      - KKFILEVIEW_SERVER_PORT=8012
+      - KKFILEVIEW_FILE_MAXSIZE=500MB
+      - KK_LOCAL_PREVIEW_DIR=/opt/kkfileview/knowledge_bases
+      - KK_OFFICE_PREVIEW_TYPE=pdf
+      - KK_CACHE_TYPE=jdk
+      - KK_CACHE_ENABLED=true
+      - KK_OFFICE_PLUGIN_SERVER_PORTS=2001,2002,2003,2004
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

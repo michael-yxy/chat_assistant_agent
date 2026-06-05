@@ -1,15 +1,10 @@
 import streamlit as st
 import os
 import json
-import time
 import threading
 import queue
 import logging
-from datetime import datetime
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
-
 from src.config.settings import (
     UPLOADED_FILES_LIST,
     OLLAMA_BASE_URL,
@@ -28,6 +23,24 @@ from src.utils.file_utils import (
     load_uploaded_files as utils_load_uploaded_files,
     save_uploaded_files as utils_save_uploaded_files
 )
+from src.services.kkfileview_service import is_kkfileview_available, get_file_preview_url
+from src.data.document_processor import DocumentProcessor
+
+logger = logging.getLogger(__name__)
+
+
+def render_text_preview(file_path: str, title: str = "文本预览") -> None:
+    """Render text preview for a file"""
+    st.markdown(f"### {title}")
+    try:
+        processor = DocumentProcessor()
+        content = processor.load_document(file_path)
+        if content:
+            st.text_area("", content, height=600)
+        else:
+            st.warning("该文件没有可提取的文本内容")
+    except Exception as e:
+        st.error(f"加载文件时出错: {str(e)}")
 
 
 def render_llm_config_section():
@@ -55,7 +68,7 @@ def render_llm_config_section():
                 index=available_models.index(current_model) if (available_models and current_model in available_models) else 0,
                 help="从Ollama获取的可用模型列表"
             )
-        except Exception as e:
+        except Exception:
             new_model = st.text_input(
                 "模型名称",
                 value=st.session_state.get('llm_model', OLLAMA_MODEL)
@@ -203,8 +216,6 @@ def render_kb_manager_page():
                     from src.core.rag_engine import RAGEngine
                     vector_store_path = kb_manager.get_kb_vector_store_path(kb.name)
                     st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
-                    if 'kb_stats' in st.session_state:
-                        del st.session_state.kb_stats
                     if 'last_kb' in st.session_state:
                         del st.session_state.last_kb
                     st.success(f"✅ 已切换到知识库 '{kb.name}'")
@@ -361,20 +372,21 @@ def render_knowledge_base_section():
                     if result['failed_files']:
                         st.warning(f"失败文件: {', '.join(result['failed_files'])}")
                     
-                    if 'kb_stats' in st.session_state:
-                        del st.session_state.kb_stats
                     st.rerun()
 
                 except Exception as e:
                     st.error(f"处理文档时出错: {str(e)}")
     
-    if st.session_state.get('uploaded_files'):
-        with st.expander(f"📁 已上传文件 ({len(st.session_state.uploaded_files)})", expanded=False):
+    if st.session_state.get('uploaded_files') or upload_path.exists():
+        actual_files = []
+        if upload_path.exists():
+            actual_files = [f.name for f in upload_path.iterdir() if f.is_file()]
+        
+        with st.expander(f"📁 已上传文件 ({len(actual_files)})", expanded=False):
             if 'file_to_delete' not in st.session_state:
                 st.session_state.file_to_delete = None
             
-            file_count = len(st.session_state.uploaded_files)
-            display_files = st.session_state.uploaded_files[-10:]
+            display_files = actual_files[-10:]
             dynamic_height = min(len(display_files) * 35 + 20, 200)
             
             st.markdown(f"""
@@ -396,17 +408,13 @@ def render_knowledge_base_section():
                             if file_path.exists():
                                 file_path.unlink()
                             
-                            st.session_state.uploaded_files.remove(st.session_state.file_to_delete)
+                            if st.session_state.file_to_delete in st.session_state.uploaded_files:
+                                st.session_state.uploaded_files.remove(st.session_state.file_to_delete)
                             
-                            st.session_state.rag_engine.rebuild_index(
-                                [upload_path / f for f in st.session_state.uploaded_files 
-                                 if (upload_path / f).exists()]
-                            )
+                            remaining_files = [upload_path / f for f in actual_files if f != st.session_state.file_to_delete and (upload_path / f).exists()]
+                            st.session_state.rag_engine.rebuild_index(remaining_files)
                             
                             save_kb_uploaded_files(uploaded_files_path, st.session_state.uploaded_files)
-                            
-                            if 'kb_stats' in st.session_state:
-                                del st.session_state.kb_stats
                             
                             st.success(f"✅ 文件 '{st.session_state.file_to_delete}' 已彻底删除")
                             st.session_state.file_to_delete = None
@@ -426,9 +434,12 @@ def render_knowledge_base_section():
                     for idx, filename in enumerate(display_files):
                         col1, col2 = st.columns([4, 1])
                         with col1:
-                            st.text(f"📄 {filename}")
+                            if st.button(f"📄 {filename}", key=f"view_file_{idx}_{len(actual_files)}", help=f"查看 {filename}", use_container_width=True):
+                                st.session_state.page = 'file_preview'
+                                st.session_state.preview_file = filename
+                                st.rerun()
                         with col2:
-                            if st.button("🗑️", key=f"delete_btn_{idx}_{len(st.session_state.uploaded_files)}", help=f"删除 {filename}"):
+                            if st.button("🗑️", key=f"delete_btn_{idx}_{len(actual_files)}", help=f"删除 {filename}"):
                                 st.session_state.file_to_delete = filename
                                 st.rerun()
                     
@@ -451,15 +462,16 @@ def render_knowledge_base_section():
     st.markdown("---")
     st.markdown("#### 📊 知识库统计")
     
-    if 'kb_stats' not in st.session_state:
-        st.session_state.kb_stats = st.session_state.rag_engine.get_stats()
+    if 'kb_manager' in st.session_state:
+        kb_stats = st.session_state.kb_manager.get_kb_stats(current_kb)
+        rag_stats = st.session_state.rag_engine.get_stats()
+        
+        stats = {
+            'total_documents': kb_stats['documents'],
+            'index_size': rag_stats['index_size']
+        }
     else:
-        if 'stats_last_update' not in st.session_state or \
-           (time.time() - st.session_state.stats_last_update) > 30:
-            st.session_state.kb_stats = st.session_state.rag_engine.get_stats()
-            st.session_state.stats_last_update = time.time()
-    
-    stats = st.session_state.kb_stats
+        stats = st.session_state.rag_engine.get_stats()
     
     col1, col2 = st.columns(2)
     with col1:
@@ -487,8 +499,6 @@ def render_knowledge_base_section():
 
     if st.button("🗑️ 清空知识库", use_container_width=True):
         try:
-            import shutil
-            
             upload_path, vector_store_path, uploaded_files_path = get_current_kb_paths()
             
             if upload_path.exists():
@@ -508,9 +518,6 @@ def render_knowledge_base_section():
             
             save_kb_uploaded_files(uploaded_files_path, [])
             
-            if 'kb_stats' in st.session_state:
-                del st.session_state.kb_stats
-            
             st.success("✅ 知识库已彻底清空，所有文档和片段均已删除")
             
             st.rerun()
@@ -522,7 +529,7 @@ def render_chat_interface():
     feedback_history = []
     for i, msg in enumerate(st.session_state.chat_history):
         if msg.get('role') == 'assistant' and i > 0:
-            user_msg = st.session_state.chat_history[i-1]
+            user_msg = st.session_state.chat_history[i - 1]
             if user_msg.get('role') == 'user':
                 likes = msg.get('likes', 0)
                 dislikes = msg.get('dislikes', 0)
@@ -539,9 +546,9 @@ def render_chat_interface():
             for idx, feedback in enumerate(display_feedback):
                 rating_icon = "❤️" if feedback['rating'] > 0 else "💔"
                 rating_text = "好评" if feedback['rating'] > 0 else "改进"
-                st.markdown(f"**{rating_icon} {rating_text} {idx+1}:**")
-                st.markdown(f"**用户问:** {feedback['query'][:50]}...")
-                st.markdown(f"**回答:** {feedback['response'][:100]}...")
+                st.markdown(f"**{rating_icon} {rating_text} {idx + 1}:**")
+                st.markdown(f"**用户问:** {feedback['query'][: 50]}...")
+                st.markdown(f"**回答:** {feedback['response'][: 100]}...")
                 st.divider()
     
     for idx, message in enumerate(st.session_state.chat_history):
@@ -588,9 +595,9 @@ def render_chat_interface():
                 is_disliked = st.session_state.get(f"disliked_{message_key}", message_dislikes > 0)
                 copied = st.session_state.get(f"copied_{message_key}", False)
                 
-                st.markdown(f"""
+                st.markdown("""
                 <style>
-                .action-btn {{
+                .action-btn {
                     background: transparent;
                     border: none;
                     cursor: pointer;
@@ -797,17 +804,16 @@ def main():
         
         def warm_up_llm():
             try:
-                import threading
                 def do_warmup():
                     try:
                         llm_client = st.session_state.rag_engine.llm_client
                         for chunk in llm_client.chat_stream("hello"):
                             if chunk.get("done"):
                                 break
-                    except Exception as e:
+                    except Exception:
                         pass
                 threading.Thread(target=do_warmup, daemon=True).start()
-            except:
+            except Exception:
                 pass
 
     if 'current_session_id' not in st.session_state:
@@ -826,7 +832,15 @@ def main():
             st.rerun()
         
         st.markdown("---")
-        documents = st.session_state.rag_engine.vector_store.get_all_documents()
+        
+        current_kb = st.session_state.get('current_kb', '默认知识库')
+        upload_path = st.session_state.kb_manager.get_kb_upload_path(current_kb)
+        
+        if upload_path.exists():
+            documents = [f.name for f in upload_path.iterdir() if f.is_file()]
+        else:
+            documents = []
+        
         st.markdown(f"### 共 {len(documents)} 个文档")
         
         for doc_name in documents:
@@ -837,6 +851,8 @@ def main():
                 for i, chunk in enumerate(chunks, 1):
                     with st.expander(f"片段 {i}", expanded=False):
                         st.markdown(f"{chunk['content']}")
+            else:
+                st.markdown("*该文件尚未被索引*")
             st.markdown("---")
         return
     
@@ -853,9 +869,94 @@ def main():
         for i, chunk in enumerate(chunks, 1):
             st.markdown(f"#### 片段 {i}")
             st.markdown(f"**来源:** {chunk['metadata'].get('source', '未知')}")
-            st.markdown(f"**内容:**")
+            st.markdown("**内容:**")
             st.markdown(chunk['content'])
             st.markdown("---")
+        return
+    
+    if st.session_state.page == 'file_preview':
+        st.title(f"📄 文件预览: {st.session_state.preview_file}")
+        if st.button("← 返回主页面", key="back_from_file_preview"):
+            st.session_state.page = 'main'
+            st.rerun()
+        
+        st.markdown("---")
+        
+        current_kb = st.session_state.get('current_kb', '默认知识库')
+        upload_path = st.session_state.kb_manager.get_kb_upload_path(current_kb)
+        file_path = upload_path / st.session_state.preview_file
+        
+        if not file_path.exists():
+            st.error("文件不存在")
+            return
+        
+        kb_available = is_kkfileview_available()
+        
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown(f"**文件路径:** `{file_path}`")
+        with col2:
+            if kb_available:
+                st.success("✅ KKFileView 服务已就绪")
+            else:
+                st.warning("⚠️ KKFileView 服务未启动")
+        
+        st.markdown("---")
+        
+        if kb_available:
+            try:
+                preview_url = get_file_preview_url(str(file_path))
+                
+                st.markdown("### 文件预览")
+                st.markdown(f"""
+                <style>
+                .preview-container {{
+                    position: relative;
+                    width: 100%;
+                    height: 700px;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                }}
+                </style>
+                <div class="preview-container">
+                    <iframe src="{preview_url}" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown("---")
+                col_download, col_open = st.columns(2)
+                with col_download:
+                    with open(file_path, 'rb') as f:
+                        st.download_button(
+                            label="📥 下载文件",
+                            data=f,
+                            file_name=st.session_state.preview_file,
+                            use_container_width=True
+                        )
+                with col_open:
+                    st.markdown(f"""
+                    <a href="{preview_url}" target="_blank" style="
+                        display: block;
+                        width: 100%;
+                        padding: 10px 20px;
+                        background-color: #667eea;
+                        color: white;
+                        text-align: center;
+                        border-radius: 8px;
+                        text-decoration: none;
+                        font-weight: 500;
+                    ">
+                        🔗 在新窗口打开预览
+                    </a>
+                    """, unsafe_allow_html=True)
+                    
+            except Exception as e:
+                st.error(f"加载预览时出错: {str(e)}")
+                render_text_preview(file_path, "备用文本预览")
+        else:
+            render_text_preview(file_path, "文本预览（KKFileView未启动）")
+        
         return
     
     if 'sidebar_collapsed' not in st.session_state:
@@ -1011,7 +1112,6 @@ def main():
             st.markdown(user_input)
         
         full_response = ""
-        thinking_content = ""
         current_mode = "chat"
         sources = []
         search_results = []
@@ -1041,7 +1141,7 @@ def main():
             feedback_history = []
             for i, msg in enumerate(st.session_state.chat_history):
                 if msg.get('role') == 'assistant' and i > 0:
-                    user_msg = st.session_state.chat_history[i-1]
+                    user_msg = st.session_state.chat_history[i - 1]
                     if user_msg.get('role') == 'user':
                         likes = msg.get('likes', 0)
                         dislikes = msg.get('dislikes', 0)
@@ -1063,9 +1163,9 @@ def main():
                     for idx, feedback in enumerate(display_feedback):
                         rating_icon = "❤️" if feedback['rating'] > 0 else "💔"
                         rating_text = "好评" if feedback['rating'] > 0 else "改进"
-                        st.markdown(f"**{rating_icon} {rating_text} {idx+1}:**")
-                        st.markdown(f"**用户问:** {feedback['query'][:50]}...")
-                        st.markdown(f"**回答:** {feedback['response'][:100]}...")
+                        st.markdown(f"**{rating_icon} {rating_text} {idx + 1}:**")
+                        st.markdown(f"**用户问:** {feedback['query'][: 50]}...")
+                        st.markdown(f"**回答:** {feedback['response'][: 100]}...")
                         st.divider()
             
             result_queue = queue.Queue()
