@@ -959,6 +959,10 @@ def main():
         
         return
     
+    st.markdown("<h1 style='color: #000000;'>智能问答助手</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #000000;'>基于RAG技术的智能问答系统，支持文档上传和知识库检索</p>", unsafe_allow_html=True)
+    st.markdown("---")
+    
     if 'sidebar_collapsed' not in st.session_state:
         st.session_state.sidebar_collapsed = False
     
@@ -994,113 +998,112 @@ def main():
         col_main, col_kb = st.columns([3, 1])
         
         with col_kb:
-            render_knowledge_base_section()
+            with st.container(border=True):
+                render_knowledge_base_section()
         
         with col_main:
-            if st.button("📋 展开会话历史", use_container_width=False):
-                st.session_state.sidebar_collapsed = False
-                st.rerun()
-            
-            st.title("🤖 智能问答助手")
-            st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
-            
-            render_llm_config_section()
-            
-            st.markdown("---")
-            
-            st.markdown("### 🚀 推理选项")
-            col_search1, col_search2, col_search3 = st.columns([1, 1, 1])
-            with col_search1:
-                use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
-                st.session_state.use_knowledge_search = use_knowledge_search
-            with col_search2:
-                use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
-                st.session_state.use_web_search = use_web_search
-            with col_search3:
-                show_thinking = st.toggle("🧠 思考过程", value=st.session_state.show_thinking, key="thinking_toggle")
-                st.session_state.show_thinking = show_thinking
-            
-            st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
-            
-            st.markdown("---")
-            
-            st.markdown("### 💬 对话")
-            render_chat_interface()
+            with st.container(border=True):
+                if st.button("📋 展开会话历史", use_container_width=False):
+                    st.session_state.sidebar_collapsed = False
+                    st.rerun()
+                
+                render_llm_config_section()
+                
+                st.markdown("---")
+                
+                st.markdown("### 🚀 推理选项")
+                col_search1, col_search2, col_search3 = st.columns([1, 1, 1])
+                with col_search1:
+                    use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
+                    st.session_state.use_knowledge_search = use_knowledge_search
+                with col_search2:
+                    use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
+                    st.session_state.use_web_search = use_web_search
+                with col_search3:
+                    show_thinking = st.toggle("🧠 思考过程", value=st.session_state.show_thinking, key="thinking_toggle")
+                    st.session_state.show_thinking = show_thinking
+                
+                st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
+                
+                st.markdown("---")
+                
+                st.markdown("### 💬 对话")
+                render_chat_interface()
     else:
         col1, col2, col3 = st.columns([1, 3, 1])
         
         with col1:
-            col_title, col_collapse = st.columns([4, 1])
-            with col_title:
-                st.markdown("### 📋 会话历史")
-            with col_collapse:
-                if st.button("«", key="collapse_sidebar", help="隐藏会话历史"):
-                    st.session_state.sidebar_collapsed = True
+            with st.container(border=True):
+                col_title, col_collapse = st.columns([4, 1])
+                with col_title:
+                    st.markdown("### 📋 会话历史")
+                with col_collapse:
+                    if st.button("«", key="collapse_sidebar", help="隐藏会话历史"):
+                        st.session_state.sidebar_collapsed = True
+                        st.rerun()
+                
+                if st.button("➕ 新建会话", use_container_width=True):
+                    st.session_state.current_session_id = generate_session_id()
+                    st.session_state.chat_history = []
+                    if 'rag_engine' in st.session_state and st.session_state.rag_engine._llm_client:
+                        st.session_state.rag_engine._llm_client.clear_history()
                     st.rerun()
-            
-            if st.button("➕ 新建会话", use_container_width=True):
-                st.session_state.current_session_id = generate_session_id()
-                st.session_state.chat_history = []
-                if 'rag_engine' in st.session_state and st.session_state.rag_engine._llm_client:
-                    st.session_state.rag_engine._llm_client.clear_history()
-                st.rerun()
-            
-            st.markdown("---")
-            
-            for session in sessions:
-                is_active = session['id'] == st.session_state.current_session_id
-                col_btn, col_del = st.columns([5, 1])
-                with col_btn:
-                    if st.button(
-                        session['title'],
-                        key=f"session_{session['id']}",
-                        use_container_width=True,
-                        type="primary" if is_active else "secondary"
-                    ):
-                        st.session_state.current_session_id = session['id']
-                        session_data = load_session(session['id'])
-                        if session_data:
-                            st.session_state.chat_history = session_data.get('chat_history', [])
-                        if 'rag_engine' in st.session_state and st.session_state.rag_engine._llm_client:
-                            st.session_state.rag_engine._llm_client.clear_history()
-                        st.rerun()
-                with col_del:
-                    if st.button("x", key=f"del_{session['id']}", use_container_width=True):
-                        delete_session(session['id'])
-                        if session['id'] == st.session_state.current_session_id:
-                            st.session_state.current_session_id = generate_session_id()
-                            st.session_state.chat_history = []
-                        st.rerun()
+                
+                st.markdown("---")
+                
+                for session in sessions:
+                    is_active = session['id'] == st.session_state.current_session_id
+                    col_btn, col_del = st.columns([5, 1])
+                    with col_btn:
+                        if st.button(
+                            session['title'],
+                            key=f"session_{session['id']}",
+                            use_container_width=True,
+                            type="primary" if is_active else "secondary"
+                        ):
+                            st.session_state.current_session_id = session['id']
+                            session_data = load_session(session['id'])
+                            if session_data:
+                                st.session_state.chat_history = session_data.get('chat_history', [])
+                            if 'rag_engine' in st.session_state and st.session_state.rag_engine._llm_client:
+                                st.session_state.rag_engine._llm_client.clear_history()
+                            st.rerun()
+                    with col_del:
+                        if st.button("x", key=f"del_{session['id']}", use_container_width=True):
+                            delete_session(session['id'])
+                            if session['id'] == st.session_state.current_session_id:
+                                st.session_state.current_session_id = generate_session_id()
+                                st.session_state.chat_history = []
+                            st.rerun()
         
         with col3:
-            render_knowledge_base_section()
+            with st.container(border=True):
+                render_knowledge_base_section()
         
         with col2:
-            st.title("🤖 智能问答助手")
-            st.markdown("基于RAG技术的智能问答系统，支持文档上传和知识库检索")
-            
-            render_llm_config_section()
-            
-            st.markdown("---")
-            
-            st.markdown("### 🚀 推理选项")
-            col_search1, col_search2, col_search3 = st.columns([1, 1, 1])
-            with col_search1:
-                use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
-                st.session_state.use_knowledge_search = use_knowledge_search
-            with col_search2:
-                use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
-                st.session_state.use_web_search = use_web_search
-            with col_search3:
-                show_thinking = st.toggle("🧠 思考过程", value=st.session_state.show_thinking, key="thinking_toggle")
-                st.session_state.show_thinking = show_thinking
-            
-            st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
-            
-            st.markdown("---")
-            
-            st.markdown("### 💬 对话")
-            render_chat_interface()
+            with st.container(border=True):
+                render_llm_config_section()
+                
+                st.markdown("---")
+                
+                st.markdown("### 🚀 推理选项")
+                col_search1, col_search2, col_search3 = st.columns([1, 1, 1])
+                with col_search1:
+                    use_knowledge_search = st.toggle("📚 知识库搜索", value=st.session_state.use_knowledge_search, key="knowledge_search_toggle")
+                    st.session_state.use_knowledge_search = use_knowledge_search
+                with col_search2:
+                    use_web_search = st.toggle("🌐 联网搜索", value=st.session_state.use_web_search, key="web_search_toggle")
+                    st.session_state.use_web_search = use_web_search
+                with col_search3:
+                    show_thinking = st.toggle("🧠 思考过程", value=st.session_state.show_thinking, key="thinking_toggle")
+                    st.session_state.show_thinking = show_thinking
+                
+                st.markdown("💡 提示：启用知识库搜索将从上传的文档中检索相关信息，启用联网搜索将从互联网获取实时信息。")
+                
+                st.markdown("---")
+                
+                st.markdown("### 💬 对话")
+                render_chat_interface()
     
     user_input = st.chat_input(
         "请输入您的问题，我会根据知识库为您解答",
