@@ -155,20 +155,33 @@ class KBManager:
     
     def get_kb_stats(self, name: str) -> Dict:
         kb_path = self.get_kb_path(name)
-        upload_path = kb_path / "uploads"
         vector_store_path = kb_path / "vector_store"
         
         doc_count = 0
-        if upload_path.exists():
-            doc_count = len([f for f in upload_path.iterdir() if f.is_file()])
+        chunk_count = 0
         
         index_path = vector_store_path / "index.faiss"
         if index_path.exists():
             try:
                 import faiss
+                import pickle
+                
                 index = faiss.read_index(str(index_path))
                 chunk_count = index.ntotal
-            except:
+                
+                documents_path = vector_store_path / "documents.pkl"
+                if documents_path.exists():
+                    with open(documents_path, 'rb') as f:
+                        data = pickle.load(f)
+                        metadata_list = data.get('metadata', [])
+                        unique_sources = set()
+                        for meta in metadata_list:
+                            if 'source' in meta:
+                                unique_sources.add(meta['source'])
+                        doc_count = len(unique_sources)
+            except Exception as e:
+                logger.error(f"Error loading vector store for stats: {e}")
+                doc_count = 0
                 chunk_count = 0
         else:
             chunk_count = 0
