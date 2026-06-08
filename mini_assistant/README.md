@@ -8,8 +8,9 @@
 - **FAISS**: 高效向量相似度搜索
 - **Sentence Transformers**: 文本嵌入和重排模型
 - **Ollama**: 本地大模型服务
-- **LangChain**: RAG 流程编排
-- **ModelScope**: 模型下载（国内加速）
+- **BAAI/bge-m3**: 嵌入模型（多模态嵌入，支持文本、图像、语音）
+- **BAAI/bge-reranker-v2-m3**: 重排模型（提升检索精度）
+- **Hugging Face**: 模型下载（国内通过 hf-mirror 加速）
 
 ## 核心功能
 
@@ -63,7 +64,7 @@ pip install -r requirements.txt
 # 启动 Ollama 服务
 ollama serve
 
-# 或直接运行模型
+# 或直接运行模型（首次运行会自动下载）
 ollama run qwen3.6:35b-a3b-q8_0
 ```
 
@@ -73,7 +74,7 @@ ollama run qwen3.6:35b-a3b-q8_0
 streamlit run app.py
 ```
 
-应用将在浏览器中打开，通常为 http://localhost:8501
+应用将在浏览器中打开，默认地址：http://localhost:8501
 
 ## 使用流程
 
@@ -108,8 +109,8 @@ streamlit run app.py
 |--------|----------|--------|------|
 | `OLLAMA_BASE_URL` | `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama 服务地址 |
 | `OLLAMA_MODEL` | `OLLAMA_MODEL` | `qwen3.6:35b-a3b-q8_0` | 大模型名称 |
-| `EMBEDDING_MODEL_NAME` | `EMBEDDING_MODEL_NAME` | `all-MiniLM-L6-v2` | 嵌入模型名称 |
-| `RERANK_MODEL_NAME` | `RERANK_MODEL_NAME` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | 重排模型名称 |
+| `EMBEDDING_MODEL_NAME` | `EMBEDDING_MODEL_NAME` | `BAAI/bge-m3` | 嵌入模型名称 |
+| `RERANK_MODEL_NAME` | `RERANK_MODEL_NAME` | `BAAI/bge-reranker-v2-m3` | 重排模型名称 |
 | `CHUNK_SIZE` | `CHUNK_SIZE` | `500` | 文档分块大小（字符） |
 | `CHUNK_OVERLAP` | `CHUNK_OVERLAP` | `50` | 分块重叠大小（字符） |
 | `RECALL_TOP_K` | `RECALL_TOP_K` | `20` | 召回阶段返回的文档数量 |
@@ -118,6 +119,21 @@ streamlit run app.py
 | `VECTOR_STORE_DIR` | `VECTOR_STORE_DIR` | `./vector_store` | 向量存储目录 |
 | `SESSIONS_DIR` | `SESSIONS_DIR` | `./sessions` | 会话存储目录 |
 | `KNOWLEDGE_BASES_DIR` | `KNOWLEDGE_BASES_DIR` | `./knowledge_bases` | 知识库存储目录 |
+
+## Streamlit 配置
+
+在 `.streamlit/config.toml` 中可以配置服务端口等参数：
+
+```toml
+[server]
+port = 8501
+address = "0.0.0.0"
+maxUploadSize = 200
+
+[browser]
+serverAddress = "localhost"
+serverPort = 8501
+```
 
 ## 项目结构
 
@@ -128,15 +144,15 @@ mini_assistant/
 ├── README.md                         # 项目文档
 ├── app.log                           # 应用日志
 ├── .streamlit/
-│   └── config.toml                   # Streamlit 配置
+│   └── config.toml                   # Streamlit 配置（端口、上传大小等）
 └── src/
     ├── __init__.py
     ├── config/
     │   ├── __init__.py
-    │   └── settings.py               # 配置文件
+    │   └── settings.py               # 应用配置文件
     ├── core/
     │   ├── __init__.py
-    │   ├── kb_manager.py             # 知识库管理
+    │   ├── kb_manager.py             # 知识库管理器
     │   └── rag_engine.py             # RAG 引擎整合
     ├── data/
     │   ├── __init__.py
@@ -144,9 +160,9 @@ mini_assistant/
     │   └── vector_store.py           # FAISS 向量存储
     ├── models/
     │   ├── __init__.py
-    │   ├── embeddings.py             # 嵌入和重排模型
+    │   ├── embeddings.py             # BGE-M3 嵌入和重排模型
     │   ├── retriever.py              # 检索器（Recall + Rerank）
-    │   └── llm.py                    # LLM 客户端
+    │   └── llm.py                    # Ollama LLM 客户端
     ├── services/
     │   ├── __init__.py
     │   └── search.py                 # 网络搜索服务
@@ -159,17 +175,30 @@ mini_assistant/
 ## RAG 流程说明
 
 1. **文档处理**: 将上传的文档解析为文本，并按设定大小分块
-2. **向量化**: 使用 Sentence Transformers 将文本块转为向量
+2. **向量化**: 使用 BGE-M3 将文本块转为向量
 3. **存储**: 使用 FAISS 建立向量索引并持久化
 4. **Recall**: 根据用户问题，从向量库中召回最相关的文档块
-5. **ReRank**: 使用 Cross-Encoder 对召回结果进行重排
+5. **ReRank**: 使用 BGE-Reranker-v2-m3 对召回结果进行重排
 6. **联网搜索**（可选）: 从互联网获取实时信息
 7. **生成**: 将相关文档和搜索结果作为上下文，调用 LLM 生成回答
+
+## 模型说明
+
+### 嵌入模型: BAAI/bge-m3
+- 支持文本、图像、语音多模态嵌入
+- 性能优异，在多种检索任务上表现出色
+- 支持多种语言
+
+### 重排模型: BAAI/bge-reranker-v2-m3
+- 专门优化的重排模型
+- 提升检索精度，过滤噪声
+- 支持长文本处理
 
 ## 注意事项
 
 - 确保 Ollama 服务正在运行
-- 首次运行会下载嵌入模型和重排模型（国内通过 ModelScope 加速）
+- 首次运行会下载 BGE-M3 和 BGE-Reranker 模型（国内通过 hf-mirror 加速）
 - 每个知识库独立存储文档和向量索引
-- 支持多文件同时上传
+- 支持多文件同时上传（最大 200MB）
 - 会话数据自动保存在 `sessions` 目录
+- 默认服务端口为 8501
