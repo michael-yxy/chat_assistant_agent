@@ -18,8 +18,8 @@ OLLAMA_BASE_URL = os.environ.get('OLLAMA_BASE_URL', "http://localhost:11434/v1")
 OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', "qwen3.6:35b-a3b-q8_0")
 OLLAMA_API_KEY = os.environ.get('OLLAMA_API_KEY', "ollama")
 
-EMBEDDING_MODEL_NAME = os.environ.get('EMBEDDING_MODEL_NAME', "all-MiniLM-L6-v2")
-RERANK_MODEL_NAME = os.environ.get('RERANK_MODEL_NAME', "cross-encoder/ms-marco-MiniLM-L-6-v2")
+EMBEDDING_MODEL_NAME = os.environ.get('EMBEDDING_MODEL_NAME', "BAAI/bge-m3")
+RERANK_MODEL_NAME = os.environ.get('RERANK_MODEL_NAME', "BAAI/bge-reranker-v2-m3")
 
 CHUNK_SIZE = int(os.environ.get('CHUNK_SIZE', 500))
 CHUNK_OVERLAP = int(os.environ.get('CHUNK_OVERLAP', 50))

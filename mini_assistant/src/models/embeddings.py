@@ -1,6 +1,5 @@
 import numpy as np
 from typing import List, Union
-import torch
 import logging
 import os
 
@@ -8,18 +7,12 @@ logger = logging.getLogger(__name__)
 
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 
-try:
-    from sentence_transformers import SentenceTransformer, CrossEncoder
-    SENTENCE_TRANSFORMERS_AVAILABLE = True
-    logger.info("sentence-transformers imported successfully")
-except ImportError as e:
-    SENTENCE_TRANSFORMERS_AVAILABLE = False
-    logger.error(f"sentence-transformers not available: {e}")
-    raise
+from sentence_transformers import SentenceTransformer, CrossEncoder
+logger.info("sentence-transformers imported successfully")
 
 
 class EmbeddingModel:
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, model_name: str = "BAAI/bge-m3"):
         self.model_name = model_name
         self._load_model()
 
@@ -45,12 +38,12 @@ class EmbeddingModel:
 
 
 class RerankerModel:
-    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+    def __init__(self, model_name: str = "BAAI/bge-reranker-v2-m3"):
         self.model_name = model_name
+        self._available = False
         self._load_model()
 
     def _load_model(self):
-        self._available = False
         try:
             logger.info(f"Loading reranker model: {self.model_name}")
             self._model = CrossEncoder(self.model_name)
