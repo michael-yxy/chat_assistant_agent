@@ -11,6 +11,8 @@
 - **BAAI/bge-m3**: 嵌入模型（多模态嵌入，支持文本、图像、语音）
 - **BAAI/bge-reranker-v2-m3**: 重排模型（提升检索精度）
 - **Hugging Face**: 模型下载（国内通过 hf-mirror 加速）
+- **KKFileView**: 在线文件预览服务（Docker）
+- **Docker**: 容器化部署
 
 ## 核心功能
 
@@ -67,6 +69,17 @@ ollama serve
 # 或直接运行模型（首次运行会自动下载）
 ollama run qwen3.6:35b-a3b-q8_0
 ```
+
+## 启动 KKFileView 服务（可选）
+
+如需使用文档预览功能，需要启动 KKFileView 服务：
+
+```bash
+# 使用 Docker 启动 KKFileView
+docker-compose up -d
+```
+
+KKFileView 服务将在 http://localhost:8012 运行。
 
 ## 启动应用
 
@@ -143,6 +156,7 @@ mini_assistant/
 ├── requirements.txt                  # 依赖列表
 ├── README.md                         # 项目文档
 ├── app.log                           # 应用日志
+├── docker-compose.yml                # KKFileView Docker 配置
 ├── .streamlit/
 │   └── config.toml                   # Streamlit 配置（端口、上传大小等）
 └── src/
@@ -165,7 +179,8 @@ mini_assistant/
     │   └── llm.py                    # Ollama LLM 客户端
     ├── services/
     │   ├── __init__.py
-    │   └── search.py                 # 网络搜索服务
+    │   ├── search.py                 # 网络搜索服务
+    │   └── kkfileview_service.py     # KKFileView 文件预览服务
     └── utils/
         ├── __init__.py
         ├── file_utils.py             # 文件工具
