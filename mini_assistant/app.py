@@ -959,7 +959,7 @@ def main():
         
         return
     
-    st.markdown("<h1 style='color: #000000;'>智能问答助手</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #000000;'>🤖智能对话助手</h1>", unsafe_allow_html=True)
     st.markdown("<p style='color: #000000;'>基于RAG技术的智能问答系统，支持文档上传和知识库检索</p>", unsafe_allow_html=True)
     st.markdown("---")
     
