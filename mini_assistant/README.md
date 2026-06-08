@@ -1,4 +1,4 @@
-# 智能问答助手 (RAG-based Assistant)
+# 智能对话助理智能体（RAG-based Chat Assistant Agent）
 
 基于 Streamlit 和 RAG 技术的智能问答系统，支持多知识库管理、文档上传、向量化存储、知识库检索和联网搜索等功能。
 
