@@ -380,7 +380,7 @@ def render_knowledge_base_section():
     if st.session_state.get('uploaded_files') or upload_path.exists():
         actual_files = []
         if upload_path.exists():
-            actual_files = [f.name for f in upload_path.iterdir() if f.is_file()]
+            actual_files = [f.name for f in upload_path.iterdir() if f.is_file() and not f.name.startswith('.')]
         
         with st.expander(f"📁 已上传文件 ({len(actual_files)})", expanded=False):
             if 'file_to_delete' not in st.session_state:
@@ -837,7 +837,7 @@ def main():
         upload_path = st.session_state.kb_manager.get_kb_upload_path(current_kb)
         
         if upload_path.exists():
-            documents = [f.name for f in upload_path.iterdir() if f.is_file()]
+            documents = [f.name for f in upload_path.iterdir() if f.is_file() and not f.name.startswith('.')]
         else:
             documents = []
         
