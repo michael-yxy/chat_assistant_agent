@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import time
 import threading
 import queue
 import logging
@@ -8,7 +9,9 @@ from pathlib import Path
 from src.config.settings import (
     UPLOADED_FILES_LIST,
     OLLAMA_BASE_URL,
-    OLLAMA_MODEL
+    OLLAMA_MODEL,
+    EMBEDDING_MODEL_NAME,
+    RERANK_MODEL_NAME
 )
 from src.services.search import WebSearch
 from src.core.kb_manager import KBManager, KnowledgeBaseConfig
@@ -215,7 +218,11 @@ def render_kb_manager_page():
                     st.session_state.current_kb = kb.name
                     from src.core.rag_engine import RAGEngine
                     vector_store_path = kb_manager.get_kb_vector_store_path(kb.name)
-                    st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
+                    st.session_state.rag_engine = RAGEngine(
+                            vector_store_path=vector_store_path,
+                            embedding_model_name=EMBEDDING_MODEL_NAME,
+                            rerank_model_name=RERANK_MODEL_NAME
+                        )
                     if 'last_kb' in st.session_state:
                         del st.session_state.last_kb
                     st.success(f"✅ 已切换到知识库 '{kb.name}'")
@@ -332,50 +339,127 @@ def render_knowledge_base_section():
         help="支持 PDF、DOCX、TXT、Excel 格式"
     )
     
+    with st.expander("⚙️ 分片策略设置", expanded=False):
+        chunk_strategy = st.selectbox(
+            "选择分片策略",
+            options=['fixed', 'hierarchical', 'semantic'],
+            format_func=lambda x: {
+                'fixed': '📏 固定长度分片',
+                'hierarchical': '📊 父子层次分片',
+                'semantic': '🧠 语义向量分片'
+            }[x],
+            index=['fixed', 'hierarchical', 'semantic'].index(st.session_state.get('chunk_strategy', 'fixed')),
+            help="选择文档分片的策略"
+        )
+        st.session_state.chunk_strategy = chunk_strategy
+        
+        if chunk_strategy == 'fixed':
+            st.markdown("**固定长度分片**：按固定字符数分割文档，保持简单高效。适合结构化文档。")
+        elif chunk_strategy == 'hierarchical':
+            st.markdown("**父子层次分片**：先按章节标题分割，再在章节内进行固定长度分片。适合有明确章节结构的文档。")
+        elif chunk_strategy == 'semantic':
+            st.markdown("**语义向量分片**：按句子边界分割，保持语义完整性。适合非结构化文本。")
+        
+        chunk_size = st.slider(
+            "分片大小（字符数）",
+            min_value=100,
+            max_value=2000,
+            value=st.session_state.get('chunk_size', 500),
+            step=100,
+            help="每个分片的最大字符数"
+        )
+        st.session_state.chunk_size = chunk_size
+        
+        chunk_overlap = st.slider(
+            "重叠大小（字符数）",
+            min_value=0,
+            max_value=200,
+            value=st.session_state.get('chunk_overlap', 50),
+            step=10,
+            help="相邻分片之间的重叠字符数"
+        )
+        st.session_state.chunk_overlap = chunk_overlap
+    
     if uploaded_files:
         if st.button("✨ 处理文档", use_container_width=True):
-            with st.spinner("正在处理文档..."):
-                try:
-                    upload_path.mkdir(parents=True, exist_ok=True)
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            try:
+                status_text.text("📁 正在保存上传文件...")
+                upload_path.mkdir(parents=True, exist_ok=True)
+                
+                saved_files = []
+                duplicate_files = []
+                new_files = []
+                
+                for idx, uploaded_file in enumerate(uploaded_files):
+                    if uploaded_file.name in st.session_state.uploaded_files:
+                        duplicate_files.append(uploaded_file.name)
+                    else:
+                        save_path = upload_path / uploaded_file.name
+                        with open(save_path, 'wb') as f:
+                            f.write(uploaded_file.getbuffer())
+                        saved_files.append(save_path)
+                        new_files.append(uploaded_file.name)
+                    progress_bar.progress((idx + 1) / len(uploaded_files))
+                
+                if duplicate_files:
+                    st.warning(f"⚠️ 以下文件已存在，已跳过：{', '.join(duplicate_files)}")
+                
+                if not saved_files:
+                    status_text.text("")
+                    progress_bar.empty()
+                    st.info("💡 所有选择的文件都已存在，请选择其他文件上传")
+                    return
+                
+                current_strategy = st.session_state.get('chunk_strategy', 'fixed')
+                current_chunk_size = st.session_state.get('chunk_size', 500)
+                current_chunk_overlap = st.session_state.get('chunk_overlap', 50)
+                
+                if (st.session_state.rag_engine.chunk_strategy != current_strategy or
+                    st.session_state.rag_engine.doc_processor.chunk_size != current_chunk_size or
+                    st.session_state.rag_engine.doc_processor.chunk_overlap != current_chunk_overlap):
+                    status_text.text("🔄 正在重新初始化RAG引擎（加载嵌入模型...）")
+                    from src.core.rag_engine import RAGEngine
+                    from src.config.settings import EMBEDDING_MODEL_NAME, RERANK_MODEL_NAME
                     
-                    saved_files = []
-                    duplicate_files = []
-                    new_files = []
-                    
-                    for uploaded_file in uploaded_files:
-                        if uploaded_file.name in st.session_state.uploaded_files:
-                            duplicate_files.append(uploaded_file.name)
-                        else:
-                            save_path = upload_path / uploaded_file.name
-                            with open(save_path, 'wb') as f:
-                                f.write(uploaded_file.getbuffer())
-                            saved_files.append(save_path)
-                            new_files.append(uploaded_file.name)
-                    
-                    if duplicate_files:
-                        st.warning(f"⚠️ 以下文件已存在，已跳过：{', '.join(duplicate_files)}")
-                    
-                    if not saved_files:
-                        st.info("💡 所有选择的文件都已存在，请选择其他文件上传")
-                        return
-                    
-                    result = st.session_state.rag_engine.add_documents(saved_files)
+                    st.session_state.rag_engine = RAGEngine(
+                        vector_store_path=vector_store_path,
+                        embedding_model_name=EMBEDDING_MODEL_NAME,
+                        rerank_model_name=RERANK_MODEL_NAME,
+                        chunk_size=current_chunk_size,
+                        chunk_overlap=current_chunk_overlap,
+                        chunk_strategy=current_strategy
+                    )
+                
+                status_text.text("🧠 正在处理文档并生成向量...")
+                progress_bar.progress(0.5)
+                
+                result = st.session_state.rag_engine.add_documents(saved_files)
+                
+                progress_bar.progress(1.0)
+                status_text.text("✅ 处理完成！")
+                
+                st.session_state.uploaded_files.extend(new_files)
+                save_kb_uploaded_files(uploaded_files_path, st.session_state.uploaded_files)
 
-                    st.session_state.uploaded_files.extend(new_files)
-                    save_kb_uploaded_files(uploaded_files_path, st.session_state.uploaded_files)
+                st.success(f"""
+                ✅ 文档处理完成！
+                - 成功处理: {len(result['successful_files'])} 个文件
+                - 生成片段: {result['total_chunks']} 个
+                """)
+                if result['failed_files']:
+                    st.warning(f"失败文件: {', '.join(result['failed_files'])}")
+                
+                st.rerun()
 
-                    st.success(f"""
-                    ✅ 文档处理完成！
-                    - 成功处理: {len(result['successful_files'])} 个文件
-                    - 生成片段: {result['total_chunks']} 个
-                    """)
-                    if result['failed_files']:
-                        st.warning(f"失败文件: {', '.join(result['failed_files'])}")
-                    
-                    st.rerun()
-
-                except Exception as e:
-                    st.error(f"处理文档时出错: {str(e)}")
+            except Exception as e:
+                status_text.text("❌ 处理失败")
+                st.error(f"处理文档时出错: {str(e)}")
+            finally:
+                progress_bar.empty()
+                status_text.empty()
     
     if st.session_state.get('uploaded_files') or upload_path.exists():
         actual_files = []
@@ -711,8 +795,8 @@ def main():
     setup_logging()
     
     st.set_page_config(
-        page_title="智能问答助手",
-        page_icon="🤖",
+        page_title="智能对话助理智能体",
+        page_icon="🤖 ",
         layout="wide"
     )
 
@@ -799,7 +883,11 @@ def main():
         from src.core.rag_engine import RAGEngine
         current_kb = st.session_state.get('current_kb', '默认知识库')
         vector_store_path = st.session_state.kb_manager.get_kb_vector_store_path(current_kb)
-        st.session_state.rag_engine = RAGEngine(vector_store_path=vector_store_path)
+        st.session_state.rag_engine = RAGEngine(
+                            vector_store_path=vector_store_path,
+                            embedding_model_name=EMBEDDING_MODEL_NAME,
+                            rerank_model_name=RERANK_MODEL_NAME
+                        )
         st.session_state.last_test_result = None
         
         def warm_up_llm():
@@ -899,7 +987,97 @@ def main():
             if kb_available:
                 st.success("✅ KKFileView 服务已就绪")
             else:
-                st.warning("⚠️ KKFileView 服务未启动")
+                # 显示Docker状态
+                from src.services.kkfileview_service import check_docker_status
+                is_installed, is_running, docker_msg = check_docker_status()
+                
+                if not is_installed:
+                    st.error("❌ Docker未安装")
+                    st.caption("📥 [下载 Docker Desktop](https://www.docker.com/products/docker-desktop/)")
+                elif not is_running:
+                    st.warning("⚠️ Docker未运行")
+                    
+                    # 初始化会话状态
+                    if 'waiting_for_docker' not in st.session_state:
+                        st.session_state.waiting_for_docker = False
+                    
+                    # 检查是否在等待Docker启动
+                    if st.session_state.waiting_for_docker:
+                        # 检查Docker状态
+                        from src.services.kkfileview_service import check_docker_status
+                        is_installed, is_running_now, _ = check_docker_status()
+                        
+                        if is_running_now:
+                            # Docker已启动，自动启动KKFileView服务
+                            st.session_state.waiting_for_docker = False
+                            st.success("✅ Docker Desktop 已就绪！")
+                            
+                            # 自动启动KKFileView服务
+                            from src.services.kkfileview_service import start_kkfileview_service
+                            progress_container = st.empty()
+                            progress_container.info("🚀 正在启动 KKFileView 服务...")
+                            
+                            def progress_callback(msg):
+                                progress_container.info(msg)
+                            
+                            success, message = start_kkfileview_service(progress_callback=progress_callback)
+                            progress_container.empty()
+                            
+                            if success:
+                                st.success(message)
+                                time.sleep(1)
+                                st.rerun()
+                            else:
+                                st.error(message)
+                        else:
+                            # Docker仍在启动中
+                            st.info("⏳ 正在等待 Docker Desktop 启动...")
+                            st.caption("💡 请确保 Docker Desktop 正在启动中（可能需要1-2分钟）...")
+                            
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.button("🔄 刷新检查", key="refresh_docker_status", use_container_width=True):
+                                    st.rerun()
+                            with col2:
+                                if st.button("取消", key="cancel_waiting"):
+                                    st.session_state.waiting_for_docker = False
+                                    st.rerun()
+                    else:
+                        # 初始状态，显示启动按钮
+                        if st.button("🐳 启动 Docker Desktop", key="start_docker_btn", use_container_width=True):
+                            from src.services.kkfileview_service import start_docker_desktop
+                            success, message = start_docker_desktop()
+                            
+                            if success:
+                                st.session_state.waiting_for_docker = True
+                                st.rerun()
+                            else:
+                                st.error(message)
+                        
+                        st.caption("💡 Docker Desktop启动后，系统将自动检测并启动KKFileView服务")
+                else:
+                    st.warning("⚠️ KKFileView 服务未启动")
+                    
+                    # 添加启动按钮
+                    if st.button("🚀 启动服务", key="start_kkfileview_btn", use_container_width=True):
+                        from src.services.kkfileview_service import start_kkfileview_service
+                        
+                        # 创建进度提示容器
+                        progress_container = st.empty()
+                        progress_container.info("🔍 正在检查Docker状态...")
+                        
+                        def progress_callback(message):
+                            progress_container.info(message)
+                        
+                        success, message = start_kkfileview_service(progress_callback=progress_callback)
+                        progress_container.empty()
+                        
+                        if success:
+                            st.success(message)
+                            time.sleep(1)
+                            st.rerun()
+                        else:
+                            st.error(message)
         
         st.markdown("---")
         
@@ -959,8 +1137,8 @@ def main():
         
         return
     
-    st.markdown("<h1 style='color: #000000;'>🤖智能对话助手</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #000000;'>基于RAG技术的智能问答系统，支持文档上传和知识库检索</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #000000;'>🤖 智能对话助理智能体</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #000000;'>简介： 基于 Streamlit 与 RAG 技术的智能问答系统，支持多轮对话、会话历史管理、多知识库管理、文档上传、文档在线预览与下载、文档向量化存储、知识库检索、联网搜索、思考过程展示等功能。</p>", unsafe_allow_html=True)
     st.markdown("---")
     
     if 'sidebar_collapsed' not in st.session_state:

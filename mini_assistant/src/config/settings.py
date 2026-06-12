@@ -27,4 +27,4 @@ CHUNK_OVERLAP = int(os.environ.get('CHUNK_OVERLAP', 50))
 RECALL_TOP_K = int(os.environ.get('RECALL_TOP_K', 20))
 RERANK_TOP_K = int(os.environ.get('RERANK_TOP_K', 5))
 
-EMBEDDING_DIM = int(os.environ.get('EMBEDDING_DIM', 384))
+EMBEDDING_DIM = int(os.environ.get('EMBEDDING_DIM', 1024))
