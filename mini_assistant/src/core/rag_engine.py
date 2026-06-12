@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Literal
 import numpy as np
 from src.data.document_processor import DocumentProcessor
 from src.models.embeddings import EmbeddingModel, RerankerModel
@@ -11,6 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+ChunkStrategy = Literal['fixed', 'hierarchical', 'semantic']
+
 
 class RAGEngine:
     def __init__(
@@ -21,12 +23,15 @@ class RAGEngine:
         llm_model: str = "qwen3.6:35b-a3b-q8_0",
         vector_store_path: Optional[Path] = None,
         chunk_size: int = 500,
-        chunk_overlap: int = 50
+        chunk_overlap: int = 50,
+        chunk_strategy: ChunkStrategy = 'fixed'
     ):
         self.doc_processor = DocumentProcessor(
             chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap
+            chunk_overlap=chunk_overlap,
+            strategy=chunk_strategy
         )
+        self.chunk_strategy = chunk_strategy
 
         self.embedding_model_name = embedding_model_name
         self.rerank_model_name = rerank_model_name
@@ -131,24 +136,38 @@ class RAGEngine:
         failed_files = []
         
         logger.info(f"Starting to process {len(file_paths)} files")
+        
+        if self._embedding_model is None:
+            logger.info("Initializing embedding model...")
+            self.embedding_model
 
         for file_path in file_paths:
             try:
                 logger.info(f"Processing file: {file_path}")
                 
-                documents = self.doc_processor.process_file(file_path)
-                logger.info(f"Extracted {len(documents)} chunks from {file_path.name}")
+                file_chunks = []
+                for chunk in self.doc_processor.stream_chunks(file_path):
+                    file_chunks.append(chunk)
+                
+                logger.info(f"Extracted {len(file_chunks)} chunks from {file_path.name}")
 
-                if documents:
-                    if self._embedding_model is None:
-                        logger.info("Initializing embedding model...")
-                        self.embedding_model
+                if file_chunks:
+                    documents = [
+                        {
+                            'content': chunk,
+                            'metadata': {
+                                'source': file_path.name,
+                                'chunk_id': idx
+                            }
+                        }
+                        for idx, chunk in enumerate(file_chunks)
+                    ]
                     
                     embeddings = self.embedding_model.encode(
-                        [doc['content'] for doc in documents]
+                        [doc['content'] for doc in documents],
+                        batch_size=16
                     )
-                    logger.info(f"Generated {len(embeddings)} embeddings")
-
+                    
                     self.vector_store.add_documents(embeddings, documents)
                     total_chunks += len(documents)
                     successful_files.append(file_path.name)
@@ -188,11 +207,25 @@ class RAGEngine:
                 continue
                 
             try:
-                documents = self.doc_processor.process_file(file_path)
+                file_chunks = []
+                for chunk in self.doc_processor.stream_chunks(file_path):
+                    file_chunks.append(chunk)
                 
-                if documents:
+                if file_chunks:
+                    documents = [
+                        {
+                            'content': chunk,
+                            'metadata': {
+                                'source': file_path.name,
+                                'chunk_id': idx
+                            }
+                        }
+                        for idx, chunk in enumerate(file_chunks)
+                    ]
+                    
                     embeddings = self.embedding_model.encode(
-                        [doc['content'] for doc in documents]
+                        [doc['content'] for doc in documents],
+                        batch_size=16
                     )
                     
                     self.vector_store.add_documents(embeddings, documents)
@@ -208,8 +241,9 @@ class RAGEngine:
                 failed_files.append(file_path.name)
         
         self.vector_store.save()
-        
         self.vector_store._loaded = True
+        
+        logger.info(f"Rebuilt {total_chunks} chunks total")
         
         return {
             'total_chunks': total_chunks,
